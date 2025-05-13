@@ -1,0 +1,10 @@
+"""
+AniBlogTracker Config File
+"""
+service_url = "http://localhost"
+db_host = "localhost"
+db_name = ""
+db_schema = "Public"
+db_user = ""
+db_user_password = ""
+postgres_port = "5432"
