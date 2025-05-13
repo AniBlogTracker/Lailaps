@@ -1,52 +1,56 @@
-import feedparser
-import psycopg2
+import os
 import ssl
 import urllib.request
-import appconfig
-
-from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 
-import os
+import appconfig
+import feedparser
+import psycopg2
+from bs4 import BeautifulSoup
+
 print("Creating image cache directory...")
-os.makedirs('imgcache', exist_ok=True)
+os.makedirs("imgcache", exist_ok=True)
 
 print("Connecting to database...")
-connection = psycopg2.connect(user=appconfig.db_user,
-  password=appconfig.db_user_password,
-  host=appconfig.db_host,
-  port=appconfig.postgres_port,
-  database="postgres_db",
-  options="-c search_path=dbo,public")
-  
+connection = psycopg2.connect(
+	user=appconfig.db_user,
+	password=appconfig.db_user_password,
+	host=appconfig.db_host,
+	port=appconfig.postgres_port,
+	database="postgres_db",
+	options="-c search_path=dbo,public",
+)
+
 cursor = conn.cursor()
 
-def getSites()):
+
+def getSites():
 	query = "SELECT * from site"
 	cursor.execute(query)
-	feeds = cursor.fetchall()
-	if feeds:
+	if feeds := cursor.fetchall():
 		return feeds
-		
+
 	return []
 
+
 def getPosts(feedurl, siteid):
-	feed = feedparser.parse(rss_url)	
+	feed = feedparser.parse(rss_url)
 	feed_items = []
 	for entry in feed.entries:
 		thumbnail = getThumbnail(entry.get("link", ""))
-	    item = {
+		item = {
 			"title": entry.get("title", ""),
 			"author": entry.get("author", ""),
 			"link": entry.get("link", ""),
 			"image": thumbnail,
 			"description": entry.get("description", ""),
-			"categories": [t.get('term') for t in entry.tags],
+			"categories": [t.get("term") for t in entry.tags],
 			"published": entry.get("published", ""),
-			"siteid": siteid
-	    }
-	    feed_items.append(item)
-	
+			"siteid": siteid,
+		}
+		feed_items.append(item)
+
+
 def getPostId(url):
 	query = "SELECT * from posts WHERE url = %s"
 	cursor.execute(query, (url))
@@ -55,7 +59,8 @@ def getPostId(url):
 		post = posts[0]
 		return post["post_id"]
 	return -1
-	
+
+
 def getAuthorId(name, siteid):
 	query = "SELECT * from author WHERE name = %s AND site_id = %i"
 	cursor.execute(query, (name, siteid))
@@ -64,7 +69,8 @@ def getAuthorId(name, siteid):
 		author = authors[0]
 		return author["author_id"]
 	return -1
-	
+
+
 def getAuthorId(name, siteid):
 	query = "SELECT * from author WHERE name = %s AND site_id = %i"
 	cursor.execute(query, (name, siteid))
@@ -73,91 +79,101 @@ def getAuthorId(name, siteid):
 		author = authors[0]
 		return author
 	return None
-	
+
+
 def updateAuthorMeta(authorid, posturl):
-	meta = getMeta(posturl)
-	query = """ UPDATE author set mastodon = %s, lastupdated = %s WHERE author_id = %i """
+	query = (
+		""" UPDATE author set mastodon = %s, lastupdated = %s WHERE author_id = %i """
+	)
 	mastodon = ""
-	if meta:
+	if meta := getMeta(posturl):
 		mastodon = meta["mastodon"]
-	cursor.execute(query, (mastodon,  datetime.now(timezone.utc), authorid)
+	cursor.execute(query, mastodon, datetime.now(timezone.utc), authorid)
 	conn.commit()
-	
+
+
 def addAuthor(name, siteid, posturl):
-	meta = getMeta(posturl)
 	query = """ INSERT INTO author(site_id, name, mastodon, lastupdated) VALUES (%s, %i, %s, %s)"""
 	mastodon = ""
-	if meta:
+	if meta := getMeta(posturl):
 		mastodon = meta["mastodon"]
-	cursor.execute(query, (siteid, name, mastodon,  datetime.now(timezone.utc))
+	cursor.execute(query, siteid, name, mastodon, datetime.now(timezone.utc))
 	conn.commit()
 	return getAuthorId(name, siteid)
+
 
 def getMeta(url):
 	response = requests.get(url)
 	if response.status_code == 200:
-		soup = BeautifulSoup(response.content, 'html.parser')
-		mastodon_tag = soup.find('meta', {'name': 'fediverse:creator'})
-		return image_tag.get('content')		
+		soup = BeautifulSoup(response.content, "html.parser")
+		mastodon_tag = soup.find("meta", {"name": "fediverse:creator"})
+		return image_tag.get("content")
 	else:
 		print("ERROR: Cannot retrieve meta information for image")
 		return None
 
+
 def getThumbnail(url):
 	response = requests.get(url)
 	if response.status_code == 200:
-		soup = BeautifulSoup(response.content, 'html.parser')
-		image_tag = soup.find('meta', {'property': 'og:image'})
-		return {"mastodon" : mastodon_tag.get('content')}		
+		soup = BeautifulSoup(response.content, "html.parser")
+		image_tag = soup.find("meta", {"property": "og:image"})
+		return {"mastodon": mastodon_tag.get("content")}
 	else:
 		print("ERROR: Cannot retrieve meta information")
 		return None
-	
+
+
 def getanimeLid(title):
 	query = "SELECT * from anime WHERE title = %s OR english_title = %s"
-	cursor.execute(query, (title, title)
+	cursor.execute(query, title, title)
 	animeids = cursor.fetchall()
 	if len(animeids) > 0:
 		return animeids[0]["anime_id"]
 	return -1
-	
+
+
 def addPostAnimeRelation(postid, animeid):
-	print("Adding Post Id relation " : postid + "for Anime ID" + animeid)
+	print("Adding Post Id relation " + postid + "for Anime ID" + animeid)
 	query = """ INSERT INTO post_relatedanime(post_id, anime_id) VALUES (%i, %i)"""
-	cursor.execute(query, (postid, animeid)
+	cursor.execute(query, postid, animeid)
 	conn.commit()
-	
+
+
 def addAuthor(siteid, name):
 	print("Adding Author " + name + " to " + siteid)
 	query = """ INSERT INTO author(site_id, name, mastodon, lastupdated) VALUES (%s, %i, %s, %s)"""
-	cursor.execute(query, (siteid, name, mastodon,  datetime.now(timezone.utc))
+	cursor.execute(query, siteid, name, mastodon, datetime.now(timezone.utc))
 	conn.commit()
 	return getAuthorId(name, siteid)
-	
+
+
 def addPost(entry):
 	print("Adding Post " + entry["title"])
 	if getPostId(entry["link"]) > 0:
 		print("Post " + entry["title"]) + " exists, skipping..."
 		return
-		
+
 	authorid = getAuthorId(entry["author"], entry["siteid"])
-	
-	if authorid < 0 :
+
+	if authorid < 0:
 		authorid = addAuthor(entry["author"], entry["siteid"], entry["posturl"])
-		
+
 	query = """ INSERT INTO posts(author_id, site_id, title, content, post_url, thumbnail_url, published_date) VALUES ()"""
-	
+
 	content = entry["description"]
 	content = (content[:100] + "...") if len(content) > 100 else content
 	link = entry["link"]
-	
-	cursor.execute(authorid, entry["siteid"], entry["title"], content, link, entry["published"])
+
+	cursor.execute(
+		authorid, entry["siteid"], entry["title"], content, link, entry["published"]
+	)
 	conn.commit()
-	
+
 	postid = getPostId(link)
 	possibletitles = entry["categories"]
 	animeids = []
-	
+
 	for possibletitle in possibletitles:
 		aniid = getanimeLid(possibletitle)
 		if aniid > 0:
@@ -168,13 +184,14 @@ def addPost(entry):
 					break
 			if found:
 				continue
-			
+
 			animeids.append(aniid)
-	
+
 	for aid in animeids:
 		addPostAnimeRelation(postid, aid)
-		
+
 	print("Post " + entry["title"] + " added")
+
 
 def main():
 	while True:
