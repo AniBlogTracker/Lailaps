@@ -71,7 +71,7 @@ def getAuthorId(name, siteid):
 	return -1
 
 
-def getAuthorId(name, siteid):
+def getAuthor(name, siteid):
 	query = "SELECT * from author WHERE name = %s AND site_id = %i"
 	cursor.execute(query, (name, siteid))
 	authors = cursor.fetchall()
@@ -154,9 +154,13 @@ def addPost(entry):
 		print("Post " + entry["title"]) + " exists, skipping..."
 		return
 
-	authorid = getAuthorId(entry["author"], entry["siteid"])
-
-	if authorid < 0:
+	author = getAuthorId(entry["author"], entry["siteid"])
+	authorid = 0
+	if author:
+		authorid = author["author_id"]
+		if author["lastupdated"].timestamp*( - datetime.timestamp() < -1209600:
+			updateAuthorMeta(entry["author"], entry["siteid"])
+	else:
 		authorid = addAuthor(entry["author"], entry["siteid"], entry["posturl"])
 
 	query = """ INSERT INTO posts(author_id, site_id, title, content, post_url, thumbnail_url, published_date) VALUES ()"""
