@@ -118,7 +118,7 @@ def getThumbnail(url):
 	if response.status_code == 200:
 		soup = BeautifulSoup(response.content, "html.parser")
 		image_tag = soup.find("meta", {"property": "og:image"})
-		return {"mastodon": mastodon_tag.get("content")}
+		return image_tag.get("content")
 	else:
 		print("ERROR: Cannot retrieve meta information")
 		return None
