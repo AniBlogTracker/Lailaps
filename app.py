@@ -106,6 +106,24 @@ def get_browseByType(sitetype):
 
 @app.route('/feeds/anime/<id>', methods=['GET'])
 def get_browseByAnimeTitle(aniid):
+	if len(sitetype) < 1:
+		return jsonify({"error": "Missing type."}), 400
+	page = request.args["p"]
+	if page == None:
+		page = 0
+	query = "SELECT title, content, post_url, thumbnail_url, published_date, author.name AS 'author', mastodon, site.name AS 'websitename', url, sitetype.name AS 'type' FROM posts WHERE anime.anime_id = i$ LIMIT 20 OFFSET i% INNER JOIN site post.site_id = site.site_id; INNER JOIN author post.author_id = author.author_id INNER JOIN sitetype site.sitetype_id = sitetype_id INNER JOIN post_relatedanime posts.post_id = post_relatedanime.post_id INNER JOIN anime anime.anime_id = post_relatedanime.anime_id ORDER BY posts.published_date DSC;"
+	cursor.execute(query, (sitetype, 20 * page)
+	feeditems = cursor.fetchall()
+	totalitems = getAnimeTitlePageCount(aniid)
+	pagedict = {
+		"next": (totalitems - page)
+		if page + 20 > totalitems
+		else (None)
+		if page == totalitems
+		else page + 20,
+		"prev": (page - 20) if page - 20 > 0 else None,
+	}
+	return jsonify({"items": feeditems, "page": pagedict}), 200
 	
 @app.route('/feeds/anime/<service>/id', methods=['GET'])
 def get_browseByAnimeTitleAndService(service, aniid):
@@ -125,6 +143,12 @@ def getSiteIdPageCount(siteid):
 def getSiteTypePageCount(type):
 	query = "SELECT count(*) AS 'count' from posts WHERE sitetype.name = s% INNER JOIN site post.site_id = site.site_id; INNER JOIN author post.author_id = author.author_id INNER JOIN sitetype site.sitetype_id = sitetype_id ORDER BY published_date DSC;"
 	cursor.execute(query, type)
+	items = cursor.fetchall()
+	return items[0]["count"]
+	
+def getAnimeTitlePageCount(aniid):
+query = "SELECT title, content, post_url, thumbnail_url, published_date, author.name AS 'author', mastodon, site.name AS 'websitename', url, sitetype.name AS 'type' FROM posts WHERE anime.anime_id = i$ INNER JOIN site post.site_id = site.site_id; INNER JOIN author post.author_id = author.author_id INNER JOIN sitetype site.sitetype_id = sitetype_id INNER JOIN post_relatedanime posts.post_id = post_relatedanime.post_id INNER JOIN anime anime.anime_id = post_relatedanime.anime_id ORDER BY posts.published_date DSC;"
+	cursor.execute(query, (aniid))
 	items = cursor.fetchall()
 	return items[0]["count"]
 
