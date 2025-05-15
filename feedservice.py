@@ -186,10 +186,10 @@ def addPost(entry):
 				if aniid == eanimeid:
 					found = True
 					break
-			if found:
-				continue
+                elif found:
+                    continue
 
-			animeids.append(aniid)
+                animeids.append(aniid)
 
 	for aid in animeids:
 		addPostAnimeRelation(postid, aid)
