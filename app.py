@@ -39,7 +39,7 @@ def get_feed():
 		else page + 20,
 		"prev": (page - 20) if page - 20 > 0 else None,
 	}
-	return jsonify({"items": feeditems, "page": pagedict}), 200
+	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
 
 
 @app.route("/search/", methods=["GET"])
@@ -62,7 +62,7 @@ def get_searchfeed():
 		else page + 20,
 		"prev": (page - 20) if page - 20 > 0 else None,
 	}
-	return jsonify({"items": feeditems, "page": pagedict}), 200
+	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
 	
 @app.route('/feeds/sites/<siteid>', methods=['GET'])
 def get_browseBySiteId(siteid):
@@ -81,7 +81,7 @@ def get_browseBySiteId(siteid):
 		else page + 20,
 		"prev": (page - 20) if page - 20 > 0 else None,
 	}
-	return jsonify({"items": feeditems, "page": pagedict}), 200
+	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
 	
 @app.route('/feeds/author/<authorid>/', methods=['GET'])
 def get_browseBySiteId(authorid):
@@ -100,7 +100,7 @@ def get_browseBySiteId(authorid):
 		else page + 20,
 		"prev": (page - 20) if page - 20 > 0 else None,
 	}
-	return jsonify({"items": feeditems, "page": pagedict}), 200
+	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
 	
 @app.route('/feeds/<sitetype>', methods=['GET'])
 def get_browseByType(sitetype):
@@ -121,7 +121,7 @@ def get_browseByType(sitetype):
 		else page + 20,
 		"prev": (page - 20) if page - 20 > 0 else None,
 	}
-	return jsonify({"items": feeditems, "page": pagedict}), 200
+	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
 
 @app.route('/feeds/anime/<id>', methods=['GET'])
 def get_browseByAnimeTitle(aniid):
@@ -142,7 +142,7 @@ def get_browseByAnimeTitle(aniid):
 		else page + 20,
 		"prev": (page - 20) if page - 20 > 0 else None,
 	}
-	return jsonify({"items": feeditems, "page": pagedict}), 200
+	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
 	
 @app.route('/feeds/anime/<service>/id', methods=['GET'])
 def get_browseByAnimeTitleAndService(service, aniid):
@@ -173,7 +173,7 @@ def get_browseByAnimeTitleAndService(service, aniid):
 		else page + 20,
 		"prev": (page - 20) if page - 20 > 0 else None,
 	}
-	return jsonify({"items": feeditems, "page": pagedict}), 200
+	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
 
 def getSearchPageCount(squery):
 	query = "SELECT count(*) AS 'count' from posts WHERE title LIKE %s OR content LIKE %s ORDER BY published_date DSC;"
@@ -217,6 +217,17 @@ def getServiceAnimePageAcount(whereserviceclause):
 	items = cursor.fetchall()
 	return items[0]["count"]
 
+def addAnimeRelationInfo(feeditems):
+	for post in feeditems:
+		query = "SELECT * from anime WHERE post_relatedanime.post_id = i% INNER JOIN anime.anime_id = post_relatedanime.anime_id;"
+		cursor.execute(query, post["post_id"])
+		items = cursor.fetchall()
+		if count(items) > 0:
+			post["related_anime"] = items
+		else:
+			post["related_anime"] = []
+	
+	return feeditems
 
 if __name__ == "__main__":
 	app.run()
