@@ -21,7 +21,25 @@ app = Flask(__name__)
 def index():
 	return render_template("index.html")
 
-
+@app.route("/sites/", methods=["GET"])
+def get_sites():
+	page = request.args["p"]
+	if page == None:
+		page = 0
+	query = "SELECT * FROM sites LIMIT 20 OFFSET i% ORDER BY name ASC;"
+	cursor.execute(query,(20 * page))
+	siteitems = cursor.fetchall()
+	totalitems = getSitesPageCount()
+	pagedict = {
+		"next": (totalitems - page)
+		if page + 20 > totalitems
+		else (None)
+		if page == totalitems
+		else page + 20,
+		"prev": (page - 20) if page - 20 > 0 else None,
+	}
+	return jsonify({"items": siteitems, "page": pagedict}), 200
+	
 @app.route("/feeds/", methods=["GET"])
 def get_feed():
 	page = request.args["p"]
@@ -207,6 +225,12 @@ def getAnimeTitlePageCount(aniid):
 
 def getPageCount():
 	query = "SELECT count(*) AS 'count' from posts ORDER BY published_date DSC;"
+	cursor.execute(query)
+	items = cursor.fetchall()
+	return items[0]["count"]
+	
+def getSitesPageCount():
+	query = "SELECT count(*) AS 'count' from site;"
 	cursor.execute(query)
 	items = cursor.fetchall()
 	return items[0]["count"]

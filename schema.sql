@@ -92,7 +92,8 @@ CREATE TABLE public.site (
     description character varying,
     feed_url character varying,
     url character varying,
-    sitetype_id bigint
+    sitetype_id bigint,
+    favicon_lastupdated timestamp without time zone
 );
 
 
