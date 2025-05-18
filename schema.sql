@@ -16,6 +16,20 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: anime_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.anime_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.anime_id_seq OWNER TO aniblogtracker;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -25,9 +39,9 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.anime (
-    anime_id bigint NOT NULL,
+    anime_id bigint DEFAULT nextval('public.anime_id_seq'::regclass) NOT NULL,
     title character varying,
-    english_title character varying,
+    synonyms character varying,
     mal_id bigint,
     anilist_id bigint,
     season character varying,
@@ -38,11 +52,25 @@ CREATE TABLE public.anime (
 ALTER TABLE public.anime OWNER TO aniblogtracker;
 
 --
+-- Name: author_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.author_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.author_id_seq OWNER TO aniblogtracker;
+
+--
 -- Name: author; Type: TABLE; Schema: public; Owner: aniblogtracker
 --
 
 CREATE TABLE public.author (
-    author_id bigint NOT NULL,
+    author_id bigint DEFAULT nextval('public.author_id_seq'::regclass) NOT NULL,
     site_id bigint,
     name character varying,
     bluesky character varying,
@@ -54,12 +82,40 @@ CREATE TABLE public.author (
 ALTER TABLE public.author OWNER TO aniblogtracker;
 
 --
+-- Name: post_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.post_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.post_id_seq OWNER TO aniblogtracker;
+
+--
+-- Name: relatedanime_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.relatedanime_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.relatedanime_id_seq OWNER TO aniblogtracker;
+
+--
 -- Name: post_relatedanime; Type: TABLE; Schema: public; Owner: aniblogtracker
 --
 
 CREATE TABLE public.post_relatedanime (
     anime_id bigint,
-    relatedanime_id bigint NOT NULL,
+    relatedanime_id bigint DEFAULT nextval('public.relatedanime_id_seq'::regclass) NOT NULL,
     post_id bigint
 );
 
@@ -71,7 +127,7 @@ ALTER TABLE public.post_relatedanime OWNER TO aniblogtracker;
 --
 
 CREATE TABLE public.posts (
-    post_id bigint NOT NULL,
+    post_id bigint DEFAULT nextval('public.post_id_seq'::regclass) NOT NULL,
     author_id bigint,
     site_id bigint,
     title character varying,
@@ -85,11 +141,25 @@ CREATE TABLE public.posts (
 ALTER TABLE public.posts OWNER TO aniblogtracker;
 
 --
+-- Name: site_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.site_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.site_id_seq OWNER TO aniblogtracker;
+
+--
 -- Name: site; Type: TABLE; Schema: public; Owner: aniblogtracker
 --
 
 CREATE TABLE public.site (
-    site_id bigint NOT NULL,
+    site_id bigint DEFAULT nextval('public.site_id_seq'::regclass) NOT NULL,
     name character varying,
     description character varying,
     feed_url character varying,
@@ -115,16 +185,65 @@ CREATE TABLE public.site_owners (
 ALTER TABLE public.site_owners OWNER TO aniblogtracker;
 
 --
+-- Name: siteowner_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.siteowner_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.siteowner_id_seq OWNER TO aniblogtracker;
+
+--
+-- Name: siteowner_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: aniblogtracker
+--
+
+ALTER SEQUENCE public.siteowner_id_seq OWNED BY public.site_owners.siteowner_id;
+
+
+--
+-- Name: sitetype_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.sitetype_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.sitetype_id_seq OWNER TO aniblogtracker;
+
+--
 -- Name: sitetype; Type: TABLE; Schema: public; Owner: aniblogtracker
 --
 
 CREATE TABLE public.sitetype (
-    sitetype_id bigint NOT NULL,
+    sitetype_id bigint DEFAULT nextval('public.sitetype_id_seq'::regclass) NOT NULL,
     name character varying
 );
 
 
 ALTER TABLE public.sitetype OWNER TO aniblogtracker;
+
+--
+-- Name: subscription_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.subscription_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.subscription_id_seq OWNER TO aniblogtracker;
 
 --
 -- Name: subscriptions; Type: TABLE; Schema: public; Owner: aniblogtracker
@@ -133,23 +252,44 @@ ALTER TABLE public.sitetype OWNER TO aniblogtracker;
 CREATE TABLE public.subscriptions (
     site_id bigint,
     user_id bigint,
-    subscription_id bigint NOT NULL
+    subscription_id bigint DEFAULT nextval('public.subscription_id_seq'::regclass) NOT NULL
 );
 
 
 ALTER TABLE public.subscriptions OWNER TO aniblogtracker;
 
 --
+-- Name: user_id_seq; Type: SEQUENCE; Schema: public; Owner: aniblogtracker
+--
+
+CREATE SEQUENCE public.user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.user_id_seq OWNER TO aniblogtracker;
+
+--
 -- Name: user; Type: TABLE; Schema: public; Owner: aniblogtracker
 --
 
 CREATE TABLE public."user" (
-    user_id bigint NOT NULL,
+    user_id bigint DEFAULT nextval('public.user_id_seq'::regclass) NOT NULL,
     is_admin boolean
 );
 
 
 ALTER TABLE public."user" OWNER TO aniblogtracker;
+
+--
+-- Name: site_owners siteowner_id; Type: DEFAULT; Schema: public; Owner: aniblogtracker
+--
+
+ALTER TABLE ONLY public.site_owners ALTER COLUMN siteowner_id SET DEFAULT nextval('public.siteowner_id_seq'::regclass);
+
 
 --
 -- Name: anime anime_pk; Type: CONSTRAINT; Schema: public; Owner: aniblogtracker
