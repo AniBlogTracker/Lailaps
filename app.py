@@ -105,7 +105,7 @@ def get_browseBySiteId(siteid):
 
 
 @app.route("/feeds/author/<authorid>/", methods=["GET"])
-def get_browseBySiteId(authorid):
+def get_browseByAuthorId(authorid):
 	page = request.args["p"]
 	if page == None:
 		page = 0
