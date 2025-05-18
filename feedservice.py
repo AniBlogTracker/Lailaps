@@ -159,7 +159,7 @@ def addPostAnimeRelation(postid, animeid):
 def addAuthor(siteid, name):
 	print("Adding Author " + name + " to " + siteid)
 	query = """ INSERT INTO author(site_id, name, mastodon, lastupdated) VALUES (%s, %i, %s, %s)"""
-	cursor.execute(query, siteid, name, mastodon, datetime.now(timezone.utc))
+	cursor.execute(query, (siteid, name, mastodon, datetime.now(timezone.utc)))
 	conn.commit()
 	return getAuthorId(name, siteid)
 
