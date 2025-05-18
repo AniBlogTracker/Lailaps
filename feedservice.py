@@ -124,6 +124,18 @@ def getThumbnail(url):
 		return None
 
 
+def downloadFavIcon(url, siteid):
+	print("Downloading Fav Icon for: " + url)
+	ssl._create_default_https_context = ssl._create_unverified_context
+	urllib.request.urlretrieve(url + "/" + siteid + ".ico", "./imgcache/"+ siteid + ".ico")
+
+
+def updateLastUpdatedSite(siteid):
+	query = """ UPDATE site set favicon_lastupdated = %s WHERE site_id = %i """
+	cursor.execute(query, (datetime.now(timezone.utc), siteid))
+	conn.commit()
+
+
 def getanimeLid(title):
 	query = "SELECT * from anime WHERE title = %s OR english_title = %s"
 	cursor.execute(query, title, title)
@@ -136,7 +148,7 @@ def getanimeLid(title):
 def addPostAnimeRelation(postid, animeid):
 	print("Adding Post Id relation " + postid + "for Anime ID" + animeid)
 	query = """ INSERT INTO post_relatedanime(post_id, anime_id) VALUES (%i, %i)"""
-	cursor.execute(query, postid, animeid)
+	cursor.execute(query, (postid, animeid))
 	conn.commit()
 
 
@@ -158,7 +170,7 @@ def addPost(entry):
 	authorid = 0
 	if author:
 		authorid = author["author_id"]
-		if author["lastupdated"].timestamp*( - datetime.timestamp() < -1209600:
+		if author["lastupdated"].timestamp() - datetime.timestamp() < -1209600:
 			updateAuthorMeta(entry["author"], entry["siteid"])
 	else:
 		authorid = addAuthor(entry["author"], entry["siteid"], entry["posturl"])
@@ -186,10 +198,10 @@ def addPost(entry):
 				if aniid == eanimeid:
 					found = True
 					break
-                elif found:
-                    continue
+		elif found:
+			continue
 
-                animeids.append(aniid)
+		animeids.append(aniid)
 
 	for aid in animeids:
 		addPostAnimeRelation(postid, aid)
@@ -205,5 +217,13 @@ def main():
 			posts = getPosts(site["feed_url"], feed["site_id"])
 			for post in posts:
 				addPost(post)
+
+			if (
+				site["favicon_lastupdated"].timestamp() - datetime.timestamp()
+				< -1209600
+			):
+				print("Downloading new favicon ")
+				updateLastUpdatedSite(updateLastUpdatedSite)
+
 		print("Done adding titles, sleeping 5 minutes ")
 		sleep(300)
