@@ -29,7 +29,9 @@ CREATE TABLE public.anime (
     title character varying,
     english_title character varying,
     mal_id bigint,
-    anilist_id bigint
+    anilist_id bigint,
+    season character varying,
+    year bigint
 );
 
 
@@ -75,7 +77,7 @@ CREATE TABLE public.posts (
     title character varying,
     content character varying,
     post_url character varying,
-    thumbnail_url character varying,
+    thumbnail_filename character varying,
     published_date timestamp without time zone
 );
 

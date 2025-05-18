@@ -37,7 +37,7 @@ def getPosts(feedurl, siteid):
 	feed = feedparser.parse(rss_url)
 	feed_items = []
 	for entry in feed.entries:
-		thumbnail = getThumbnail(entry.get("link", ""))
+		thumbnail = getThumbnail(entry.get("link", ""), siteid)
 		item = {
 			"title": entry.get("title", ""),
 			"author": entry.get("author", ""),
@@ -113,12 +113,16 @@ def getMeta(url):
 		return None
 
 
-def getThumbnail(url):
+def getThumbnail(url, siteid):
 	response = requests.get(url)
 	if response.status_code == 200:
 		soup = BeautifulSoup(response.content, "html.parser")
 		image_tag = soup.find("meta", {"property": "og:image"})
-		return image_tag.get("content")
+		imgurl =  image_tag.get("content")
+		print("Downloading thumbnail: " + imgurl)
+		ssl._create_default_https_context = ssl._create_unverified_context
+		urllib.request.urlretrieve(imgurl, "./imgcache/"+ siteid + os.path.basename(image_tag.get("content")))
+		return siteid + os.path.basename(image_tag.get("content"))
 	else:
 		print("ERROR: Cannot retrieve meta information")
 		return None
