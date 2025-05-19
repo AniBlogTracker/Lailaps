@@ -41,6 +41,15 @@ def checkFeed(feedurl):
 		return True
 	
 	return False
+	
+def getSiteId(feedurl):
+	query = """SELECT * from site WHERE feed_url = %s"""
+	cursor.execute(query, (feedurl,))
+	feeds = cursor.fetchall()
+	if len(feeds) > 0:
+		return feed[0]["site_id"]
+	
+	return -1
 
 try:
 	opts, args = getopt.getopt(sys.argv[1:],"hu:",["feedurl="])
@@ -60,9 +69,11 @@ for opt, arg in opts:
 			cursor.execute(query, (siteinfo["title"], siteinfo["description"], feedurl, siteinfo["link"], datetime.now(),) )
 			conn.commit()
 			print("Added feed " + feedurl)
-			print("Downloading Fav Icon for: " + url)
-			ssl._create_default_https_context = ssl._create_unverified_context
-			urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./imgcache/"+ str(siteid) + ".ico")
+			siteid = getSiteId(feedurl)
+			if siteid > 0:
+				print("Downloading Fav Icon for: " + url)
+				ssl._create_default_https_context = ssl._create_unverified_context
+				urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./imgcache/"+ str(siteid) + ".ico")
 		else:
 			print("Feed " + feedurl + " already exists")
         
