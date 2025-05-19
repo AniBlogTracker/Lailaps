@@ -65,7 +65,7 @@ for opt, arg in opts:
 		if checkFeed(feedurl) == False:
 			siteinfo = getFeedMeta(feedurl)
 			print("Adding feed " + feedurl)
-			query = """ INSERT INTO site(name, description, feed_url, url, favicon_lastupdated) VALUES (%s, %s, %s, %s, %s)"""
+			query = """ INSERT INTO site(name, description, feed_url, url, favicon_lastupdated, sitetype_id) VALUES (%s, %s, %s, %s, %s, 1)"""
 			cursor.execute(query, (siteinfo["title"], siteinfo["description"], feedurl, siteinfo["link"], datetime.now(),) )
 			conn.commit()
 			print("Added feed " + feedurl)

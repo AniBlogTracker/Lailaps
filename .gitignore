@@ -1,3 +1,4 @@
 /lailaps.wsgi
 /appconfig.py
 /static/imgcache
+/gunicorn_config.py
