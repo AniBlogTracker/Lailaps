@@ -11,7 +11,7 @@ import psycopg2.extras
 from bs4 import BeautifulSoup
 
 print("Creating image cache directory...")
-os.makedirs("imgcache", exist_ok=True)
+os.makedirs(",/static/imgcache", exist_ok=True)
 
 print("Connecting to database...")
 conn = psycopg2.connect(
@@ -124,7 +124,7 @@ def getThumbnail(url, siteid):
 		imgurl =  image_tag.get("content")
 		print("Downloading thumbnail: " + imgurl)
 		ssl._create_default_https_context = ssl._create_unverified_context
-		urllib.request.urlretrieve(imgurl, "./imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content")))
+		urllib.request.urlretrieve(imgurl, "./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content")))
 		return str(siteid) + os.path.basename(image_tag.get("content"))
 	else:
 		print("ERROR: Cannot retrieve meta information")
@@ -134,7 +134,7 @@ def getThumbnail(url, siteid):
 def downloadFavIcon(url, siteid):
 	print("Downloading Fav Icon for: " + url)
 	ssl._create_default_https_context = ssl._create_unverified_context
-	urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./imgcache/"+ str(siteid) + ".ico")
+	urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./static/imgcache/"+ str(siteid) + ".ico")
 
 
 def updateLastUpdatedSite(siteid):

@@ -18,7 +18,7 @@ conn = psycopg2.connect(
 
 cursor = conn.cursor()
 
-os.makedirs("imgcache", exist_ok=True)
+os.makedirs(",/static/imgcache", exist_ok=True)
 
 def getFeedMeta(feedurl):
 	feed = feedparser.parse(feedurl)
@@ -73,7 +73,7 @@ for opt, arg in opts:
 			if siteid > 0:
 				print("Downloading Fav Icon for: " + url)
 				ssl._create_default_https_context = ssl._create_unverified_context
-				urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./imgcache/"+ str(siteid) + ".ico")
+				urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./static/imgcache/"+ str(siteid) + ".ico")
 		else:
 			print("Feed " + feedurl + " already exists")
         
