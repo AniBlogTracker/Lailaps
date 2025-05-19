@@ -24,7 +24,7 @@ conn = psycopg2.connect(
 )
 
 cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
+cursor2 = conn.cursor()
 
 def getSites():
 	query = "SELECT * from site"
@@ -91,7 +91,7 @@ def updateAuthorMeta(authorid, posturl):
 	mastodon = ""
 	if meta := getMeta(posturl):
 		mastodon = meta["mastodon"]
-	cursor.execute(query, (mastodon, datetime.now(timezone.utc), authorid))
+	cursor2.execute(query, (mastodon, datetime.now(), authorid))
 	conn.commit()
 
 
@@ -100,7 +100,7 @@ def addAuthor(name, siteid, posturl):
 	mastodon = ""
 	if meta := getMeta(posturl):
 		mastodon = meta
-	cursor.execute(query, (siteid, name, mastodon, datetime.now(timezone.utc)))
+	cursor2.execute(query, (siteid, name, mastodon, datetime.now()))
 	conn.commit()
 	return getAuthorId(name, siteid)
 
@@ -138,13 +138,14 @@ def downloadFavIcon(url, siteid):
 
 
 def updateLastUpdatedSite(siteid):
-	query = """ UPDATE site set favicon_lastupdated = %s WHERE site_id = %s """
-	cursor.execute(query, (datetime.now(timezone.utc), siteid))
+	query = """ UPDATE site SET favicon_lastupdated = %s WHERE site_id = %s """
+	datenow = datetime.now()
+	cursor2.execute(query, (datenow, siteid))
 	conn.commit()
 
 
 def getanimeLid(title):
-	query = """SELECT * from anime WHERE title = %s OR synonyms = %s"""
+	query = """SELECT * from anime WHERE title LIKE %s OR synonyms LIKE %s"""
 	cursor.execute(query, (title, title))
 	animeids = cursor.fetchall()
 	if len(animeids) > 0:
@@ -203,7 +204,8 @@ def addPost(entry):
 		animeids.append(aniid)
 
 	for aid in animeids:
-		addPostAnimeRelation(postid, aid)
+		if aid > 0:
+			addPostAnimeRelation(postid, aid)
 
 	print("Post " + entry["title"] + " added")
 
@@ -217,13 +219,21 @@ def main():
 			posts = getPosts(site["feed_url"], site["site_id"])
 			for post in posts:
 				addPost(post)
-			diff = time.mktime(adata["favicon_lastupdated"].timetuple()) - time.mktime(datetime.now().timetuple())
-			if diff < -1209600:
-				print("Downloading new favicon ")
+			
+			downloadfavicon = False
+			if site["favicon_lastupdated"]:
+				diff = time.mktime(site["favicon_lastupdated"].timetuple()) - time.mktime(datetime.now().timetuple())
+				if diff < -1209600:
+					downloadfavicon = True
+			else:
+				downloadfavicon = True
+			
+			if downloadfavicon:
+				print("Downloading new favicon ")	
 				updateLastUpdatedSite(updateLastUpdatedSite)
 
 		print("Done adding titles, sleeping 5 minutes ")
-		sleep(300)
+		time.sleep(300)
 		
 if __name__== "__main__":
 	main()

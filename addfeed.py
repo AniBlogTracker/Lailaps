@@ -1,9 +1,11 @@
 import sys
 import getopt
+import os
 
 import appconfig
 import feedparser
 import psycopg2
+from datetime import datetime, timezone
 
 conn = psycopg2.connect(
 	user=appconfig.db_user,
@@ -15,6 +17,8 @@ conn = psycopg2.connect(
 )
 
 cursor = conn.cursor()
+
+os.makedirs("imgcache", exist_ok=True)
 
 def getFeedMeta(feedurl):
 	feed = feedparser.parse(feedurl)
@@ -52,10 +56,13 @@ for opt, arg in opts:
 		if checkFeed(feedurl) == False:
 			siteinfo = getFeedMeta(feedurl)
 			print("Adding feed " + feedurl)
-			query = """ INSERT INTO site(name, description, feed_url, url) VALUES (%s, %s, %s, %s)"""
-			cursor.execute(query, (siteinfo["title"], siteinfo["description"], feedurl, siteinfo["link"]) )
+			query = """ INSERT INTO site(name, description, feed_url, url, favicon_lastupdated) VALUES (%s, %s, %s, %s, %s)"""
+			cursor.execute(query, (siteinfo["title"], siteinfo["description"], feedurl, siteinfo["link"], datetime.now(),) )
 			conn.commit()
 			print("Added feed " + feedurl)
+			print("Downloading Fav Icon for: " + url)
+			ssl._create_default_https_context = ssl._create_unverified_context
+			urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./imgcache/"+ str(siteid) + ".ico")
 		else:
 			print("Feed " + feedurl + " already exists")
         
