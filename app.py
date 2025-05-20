@@ -2,7 +2,7 @@ import appconfig
 import psycopg2
 import psycopg2.extras
 from json_tricks import dumps
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 
 print("Connecting to database...")
 conn = psycopg2.connect(
