@@ -2,3 +2,5 @@ psycopg2
 flask
 feedparser
 beautifulsoup
+Json-tricks
+gunicorn
