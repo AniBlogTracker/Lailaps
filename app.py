@@ -38,7 +38,7 @@ def get_sites():
 		else int(page) + 20,
 		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	data = {"data" : feeditems}
+	data = {"data" : siteitems}
 	data["page"] = pagedict
 	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
