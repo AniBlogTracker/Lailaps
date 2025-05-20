@@ -285,6 +285,10 @@ def addAnimeRelationInfo(feeditems):
 			post["related_anime"] = []
 
 	return feeditems
+	
+@app.route('/static/imgcache/<path:path>')
+def send_report(path):
+	return send_from_directory('static/imgcache', path)
 
 
 if __name__ == "__main__":
