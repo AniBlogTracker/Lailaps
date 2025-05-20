@@ -47,7 +47,7 @@ def getSiteId(feedurl):
 	cursor.execute(query, (feedurl,))
 	feeds = cursor.fetchall()
 	if len(feeds) > 0:
-		return feed[0]["site_id"]
+		return feeds[0]["site_id"]
 	
 	return -1
 

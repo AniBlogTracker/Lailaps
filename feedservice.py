@@ -40,13 +40,16 @@ def getPosts(feedurl, siteid):
 	feed_items = []
 	for entry in feed.entries:
 		thumbnail = getThumbnail(entry.get("link", ""), siteid)
+		tags = []
+		if hasattr(entry, "tags"):
+			tags = [t.get("term") for t in entry.tags]
 		item = {
 			"title": entry.get("title", ""),
 			"author": entry.get("author", ""),
 			"link": entry.get("link", ""),
 			"image": thumbnail,
 			"description": entry.get("description", ""),
-			"categories": [t.get("term") for t in entry.tags],
+			"categories": tags ,
 			"published": entry.get("published", ""),
 			"siteid": siteid,
 		}
@@ -90,7 +93,8 @@ def updateAuthorMeta(authorid, posturl):
 	)
 	mastodon = ""
 	if meta := getMeta(posturl):
-		mastodon = meta["mastodon"]
+		if meta["mastodon"]:
+			mastodon = meta["mastodon"]
 	cursor2.execute(query, (mastodon, datetime.now(), authorid))
 	conn.commit()
 
@@ -110,7 +114,9 @@ def getMeta(url):
 	if response.status == 200:
 		soup = BeautifulSoup(response.read(), "html.parser")
 		mastodon_tag = soup.find("meta", {"name": "fediverse:creator"})
-		return mastodon_tag.get("content")
+		if mastodon_tag:
+			return mastodon_tag.get("content")
+		return ""
 	else:
 		print("ERROR: Cannot retrieve meta information for image")
 		return None
@@ -237,8 +243,8 @@ def main():
 				print("Downloading new favicon ")	
 				updateLastUpdatedSite(updateLastUpdatedSite)
 
-		print("Done adding titles, sleeping 5 minutes ")
-		time.sleep(300)
+		print("Done adding titles, sleeping 10 minutes ")
+		time.sleep(600)
 		
 if __name__== "__main__":
 	main()
