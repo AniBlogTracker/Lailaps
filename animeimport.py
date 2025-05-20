@@ -4,6 +4,7 @@ import json
 import psycopg2
 import ssl
 import urllib.request
+from urllib.request import build_opener, install_opener, _opener
 from datetime import datetime, timezone
 
 print("Connecting to database...")
@@ -18,11 +19,21 @@ conn = psycopg2.connect(
 
 cursor = conn.cursor()
 
+build_opener, install_opener, _opener
+
+if _opener is None:
+    opener = build_opener()
+    install_opener(opener)
+else:
+    opener = _opener
+
+opener.addheaders = [('User-Agent','Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15'
+)]
 
 def downloadTitleIDs():
     print("Downloading Title Ids")
     ssl._create_default_https_context = ssl._create_unverified_context
-    response = urllib.request.urlopen(
+    response = opener.open(
         "https://raw.githubusercontent.com/manami-project/anime-offline-database/master/anime-offline-database.json"
     )
     if response.status == 200:

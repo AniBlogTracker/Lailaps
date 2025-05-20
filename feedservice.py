@@ -2,6 +2,7 @@ import os
 import ssl
 import time
 import urllib.request
+from urllib.request import build_opener, install_opener, _opener
 from datetime import datetime, timezone
 
 import appconfig
@@ -9,6 +10,17 @@ import feedparser
 import psycopg2
 import psycopg2.extras
 from bs4 import BeautifulSoup
+
+build_opener, install_opener, _opener
+
+if _opener is None:
+	opener = build_opener()
+	install_opener(opener)
+else:
+	opener = _opener
+
+opener.addheaders = [('User-Agent','Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15'
+)]
 
 print("Creating image cache directory...")
 os.makedirs(",/static/imgcache", exist_ok=True)
@@ -39,6 +51,10 @@ def getPosts(feedurl, siteid):
 	feed = feedparser.parse(feedurl)
 	feed_items = []
 	for entry in feed.entries:
+		if getPostId(entry.get("link", "")) > 0:
+			print("Post " + entry["title"] + " exists, skipping...")
+			continue
+			
 		thumbnail = getThumbnail(entry.get("link", ""), siteid)
 		tags = []
 		if hasattr(entry, "tags"):
@@ -53,6 +69,7 @@ def getPosts(feedurl, siteid):
 			"published": entry.get("published", ""),
 			"siteid": siteid,
 		}
+		print("Queuing post " + entry["title"] + " to be added...")
 		feed_items.append(item)
 	return feed_items
 
@@ -110,7 +127,7 @@ def addAuthor(name, siteid, posturl):
 
 
 def getMeta(url):
-	response = urllib.request.urlopen(url)
+	response = opener.open(url)
 	if response.status == 200:
 		soup = BeautifulSoup(response.read(), "html.parser")
 		mastodon_tag = soup.find("meta", {"name": "fediverse:creator"})
@@ -123,18 +140,24 @@ def getMeta(url):
 
 
 def getThumbnail(url, siteid):
-	response = urllib.request.urlopen(url)
+	response = opener.open(url)
 	if response.status == 200:
-		soup = BeautifulSoup(response.read(), "html.parser")
-		image_tag = soup.find("meta", {"property": "og:image"})
-		imgurl =  image_tag.get("content")
-		if os.path.isfile("./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content"))):
-			print("Thumbnail exists, skipping...")
-		else:
-			print("Downloading thumbnail: " + imgurl)
-			ssl._create_default_https_context = ssl._create_unverified_context
-			urllib.request.urlretrieve(imgurl, "./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content")))
-		return str(siteid) + os.path.basename(image_tag.get("content"))
+		try:
+			soup = BeautifulSoup(response.read(), "html.parser")
+			image_tag = soup.find("meta", {"property": "og:image"})
+			imgurl =  image_tag.get("content")
+			if os.path.isfile("./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content"))):
+				print("Thumbnail exists, skipping...")
+			else:
+				print("Downloading thumbnail: " + imgurl)
+				ssl._create_default_https_context = ssl._create_unverified_context
+				img = opener.open(imgurl)
+				with open("./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content")), 'b+w') as f:
+					f.write(img.read())
+			return str(siteid) + os.path.basename(image_tag.get("content"))
+		except Exception:
+			print("ERROR: Cannot retrieve image")
+			return ""
 	else:
 		print("ERROR: Cannot retrieve meta information")
 		return None
@@ -143,7 +166,10 @@ def getThumbnail(url, siteid):
 def downloadFavIcon(url, siteid):
 	print("Downloading Fav Icon for: " + url)
 	ssl._create_default_https_context = ssl._create_unverified_context
-	urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./static/imgcache/"+ str(siteid) + ".ico")
+	opener.retrieve(url + "/favicon.ico")
+	img = opener.open(imgurl)
+	with open("./static/imgcache/"+ str(siteid) + ".ico", 'b+w') as f:
+		f.write(img.read())
 
 
 def updateLastUpdatedSite(siteid):
@@ -154,8 +180,9 @@ def updateLastUpdatedSite(siteid):
 
 
 def getanimeLid(title):
+	stitle = "%" + title + "%"
 	query = """SELECT * from anime WHERE title LIKE %s OR synonyms LIKE %s"""
-	cursor.execute(query, (title, title))
+	cursor.execute(query, (stitle, stitle))
 	animeids = cursor.fetchall()
 	if len(animeids) > 0:
 		return animeids[0]["anime_id"]
@@ -172,7 +199,6 @@ def addPostAnimeRelation(postid, animeid):
 def addPost(entry):
 	print("Adding Post " + entry["title"])
 	if getPostId(entry["link"]) > 0:
-		print("Post " + entry["title"] + " exists, skipping...")
 		return
 
 	author = getAuthorId(entry["author"], entry["siteid"])
@@ -224,7 +250,6 @@ def addPost(entry):
 def main():
 	while True:
 		sites = getSites()
-		print(sites)
 		for site in sites:
 			print("Checking " + site["name"])
 			posts = getPosts(site["feed_url"], site["site_id"])

@@ -1,6 +1,7 @@
 import appconfig
 import psycopg2
 import psycopg2.extras
+from json_tricks import dumps
 from flask import Flask, jsonify, render_template, request
 
 print("Connecting to database...")
@@ -24,162 +25,161 @@ def index():
 
 @app.route("/sites/", methods=["GET"])
 def get_sites():
-	page = request.args["p"]
-	if page == None:
-		page = 0
+	page = request.args.get('p') or '0'
 	query = "SELECT * FROM site ORDER BY name asc OFFSET %s LIMIT 20"
-	cursor.execute(query, (20 * (int(page)-1),))
+	cursor.execute(query, (int(page),))
 	siteitems = cursor.fetchall()
 	totalitems = getSitesPageCount()
 	pagedict = {
-		"next": (totalitems - int(page))
+		"next": (None)
 		if int(page) + 20 > totalitems
 		else (None)
 		if int(page) == totalitems
 		else int(page) + 20,
-		"prev": (int(page) - 20) if int(page) - 20 > 0 else None,
+		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	return jsonify({"items": siteitems, "page": pagedict}), 200
+	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["page"] = pagedict
+	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route("/feeds/", methods=["GET"])
 def get_feed():
-	page = request.args["p"]
-	if page == None:
-		page = 0
+	page = request.args.get('p') or '0'
 	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
-	cursor.execute(query, ((int(page)-1)*20 ,))
+	cursor.execute(query, (int(page) ,))
 	feeditems = cursor.fetchall()
 	print(feeditems)
 	totalitems = getPageCount()
 	pagedict = {
-		"next": (totalitems - int(page))
+		"next": (None)
 		if int(page) + 20 > totalitems
 		else (None)
 		if int(page) == totalitems
 		else int(page) + 20,
-		"prev": (int(page) - 20) if int(page) - 20 > 0 else None,
+		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
+	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["page"] = pagedict
+	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route("/search/", methods=["GET"])
 def get_searchfeed():
 	squery = request.args["q"]
-	if len(query) < 1:
-		return jsonify({"error": "Missing query text."}), 400
-	page = request.args["p"]
-	if page == None:
-		page = 0
-	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts WHERE LIKE %s OR content LIKE %s LIMIT 20 OFFSET %s INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id e.sitetype_id ORDER BY posts.published_date DESC;"
-	cursor.execute(query, (squery, squery, 10 * page))
+	squery = "%" + squery + "%"
+	if len(squery) < 1:
+		return jsonify(data={"error": "Missing query text."}), 400
+	page = request.args.get('p') or '0'
+	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE title LIKE %s OR content LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
+	cursor.execute(query, (squery, squery, int(page),))
 	feeditems = cursor.fetchall()
 	totalitems = getSearchPageCount(query)
 	pagedict = {
-		"next": (totalitems - int(page))
+		"next": (None)
 		if int(page) + 20 > totalitems
 		else (None)
 		if int(page) == totalitems
 		else int(page) + 20,
-		"prev": (int(page) - 20) if int(page) - 20 > 0 else None,
+		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
+	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["page"] = pagedict
+	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route("/feeds/sites/<siteid>", methods=["GET"])
 def get_browseBySiteId(siteid):
-	page = request.args["p"]
-	if page == None:
-		page = 0
-	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts WHERE posts.site_id = %s LIMIT 20 OFFSET %s INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id ORDER BY posts.published_date DESC;"
-	cursor.execute(query, (siteid, 20 * (int(page)-1)))
+	page = request.args.get('p') or '0'
+	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.site_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
+	cursor.execute(query, (siteid, int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getSiteIdPageCount(siteid)
 	pagedict = {
-		"next": (totalitems - int(page))
+		"next": (None)
 		if int(page) + 20 > totalitems
 		else (None)
 		if int(page) == totalitems
 		else int(page) + 20,
-		"prev": (int(page) - 20) if int(page) - 20 > 0 else None,
+		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
+	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["page"] = pagedict
+	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 @app.route("/feeds/author/<authorid>/", methods=["GET"])
 def get_browseByAuthorId(authorid):
-	page = request.args["p"]
-	if page == None:
-		page = 0
-	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts WHERE posts.author_id = %s LIMIT 20 OFFSET %s INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id ORDER BY posts.published_date DESC;"""
-	cursor.execute(query, (authorid, 20 * (int(page)-1)))
+	page = request.args.get('p') or '0'
+	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.author_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"""
+	cursor.execute(query, (authorid, int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getAuthorCount(authorid)
 	pagedict = {
-		"next": (totalitems - int(page))
+		"next": (None)
 		if int(page) + 20 > totalitems
 		else (None)
 		if int(page) == totalitems
 		else int(page) + 20,
-		"prev": (int(page) - 20) if int(page) - 20 > 0 else None,
+		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
+	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["page"] = pagedict
+	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
-@app.route("/feeds/<sitetype>", methods=["GET"])
+@app.route("/feeds/<sitetype>/", methods=["GET"])
 def get_browseByType(sitetype):
 	if len(sitetype) < 1 and type(service) != str:
-		return jsonify({"error": "Missing type."}), 400
-	page = request.args["p"]
-	if page == None:
-		page = 0
-	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts WHERE sitetype.name LIKE %s LIMIT 20 OFFSET %s INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id ORDER BY posts.published_date DESC;"""
-	cursor.execute(query, (sitetype, 20 * (int(page)-1)))
+		return jsonify(data={"error": "Missing type."}), 400
+	page = request.args.get('p') or '0'
+	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE sitetype.name LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s ;"""
+	cursor.execute(query, (sitetype,int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getSiteTypePageCount(sitetype)
 	pagedict = {
-		"next": (totalitems - int(page))
+		"next": (None)
 		if int(page) + 20 > totalitems
 		else (None)
 		if int(page) == totalitems
 		else int(page) + 20,
-		"prev": (int(page) - 20) if int(page) - 20 > 0 else None,
+		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
+	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["page"] = pagedict
+	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
-@app.route("/feeds/anime/<id>", methods=["GET"])
+@app.route("/feeds/anime/<aniid>", methods=["GET"])
 def get_browseByAnimeTitle(aniid):
 	if len(aniid) < 1:
-		return jsonify({"error": "Missing Anime Title ID."}), 400
-	page = request.args["p"]
-	if page == None:
-		page = 0
-	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts WHERE anime.anime_id = i$ LIMIT 20 OFFSET %s INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id ORDER BY posts.published_date DESC;"""
-	cursor.execute(query, (sitetype, 20 * (int(page)-1)))
+		return jsonify(data={"error": "Missing Anime Title ID."}), 400
+	page = request.args.get('p') or '0'
+	query = """SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE anime.anime_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s ;"""
+	cursor.execute(query, (aniid,int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getAnimeTitlePageCount(aniid)
 	pagedict = {
-		"next": (totalitems - int(page))
+		"next": (None)
 		if int(page) + 20 > totalitems
 		else (None)
 		if int(page) == totalitems
 		else int(page) + 20,
-		"prev": (int(page) - 20) if int(page) - 20 > 0 else None,
+		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
+	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["page"] = pagedict
+	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
-@app.route("/feeds/anime/<service>/id", methods=["GET"])
+@app.route("/feeds/anime/<service>/<aniid>", methods=["GET"])
 def get_browseByAnimeTitleAndService(service, aniid):
 	if len(service) < 1 and type(service) != str:
-		return jsonify({"error": "Missing service or invalid input."}), 400
+		return jsonify(data={"error": "Missing service or invalid input."}), 400
 	elif len(aniid) < 1:
-		return jsonify({"error": "Missing Anime Title ID."}), 400
-	page = request.args["p"]
-	if page == None:
-		page = 0
-	lowercaseService = lower(service)
+		return jsonify(data={"error": "Missing Anime Title ID."}), 400
+	page = request.args.get('p') or '0'
+	lowercaseService = service.lower()
 	servicewhereclause = ""
 	if lowercaseService == "mal":
 		servicewhereclause = "anime.mal_id = %s"
@@ -187,31 +187,34 @@ def get_browseByAnimeTitleAndService(service, aniid):
 		servicewhereclause == "anime.anilist_id = %s"
 	else:
 		return (
-			jsonify(
+			jsonify(data=
 				{"error": "Invalid service specificed. Choices are mal and anilist."}
 			),
 			400,
 		)
 	query = (
-		"""SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts WHERE """
+		"""SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE """
 		+ servicewhereclause
-		+ """ LIMIT 20 OFFSET %s INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id ORDER BY posts.published_date DESC;"""
+		+ """ ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"""
 	)
-	cursor.execute(query, (aniid, 20 * (int(page)-1)))
+	cursor.execute(query, (aniid,int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getAnimeTitlePageCount(aniid)
 	pagedict = {
-		"next": (totalitems - int(page))
+		"next": (None)
 		if int(page) + 20 > totalitems
 		else (None)
 		if int(page) == totalitems
 		else int(page) + 20,
-		"prev": (int(page) - 20) if int(page) - 20 > 0 else None,
+		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
-	return jsonify({"items": addAnimeRelationInfo(feeditems), "page": pagedict}), 200
+	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["page"] = pagedict
+	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
 
 def getSearchPageCount(squery):
+	squery = "%" + squery + "%"
 	query = """SELECT count(*) AS count from posts WHERE title LIKE %s OR content LIKE %s;"""
 	cursor.execute(query, (squery, squery))
 	items = cursor.fetchall()
@@ -220,27 +223,27 @@ def getSearchPageCount(squery):
 
 def getSiteIdPageCount(siteid):
 	query = """SELECT count(*) AS count from posts WHERE site_id = %s;"""
-	cursor.execute(query, (query,))
+	cursor.execute(query, (siteid,))
 	items = cursor.fetchall()
 	return items[0]["count"]
 
 
 def getSiteTypePageCount(type):
-	query = """SELECT count(*) AS count from posts WHERE sitetype.name = %s INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id;"""
+	query = """SELECT count(*) AS count from posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE sitetype.name = %s;"""
 	cursor.execute(query, (type,))
 	items = cursor.fetchall()
 	return items[0]["count"]
 
 
 def getAuthorCount(authorid):
-	query = """SELECT count(*) AS count from posts WHERE sposts.author_id = %s INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id;"""
+	query = """SELECT count(*) AS count from posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.author_id = %s;"""
 	cursor.execute(query, (authorid,))
 	items = cursor.fetchall()
 	return items[0]["count"]
 
 
 def getAnimeTitlePageCount(aniid):
-	query = """SELECT count(*) AS count FROM posts WHERE anime.anime_id = i$ INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id;"""
+	query = """SELECT count(*) AS count FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE anime.anime_id = %s;"""
 	cursor.execute(query, (aniid,))
 	items = cursor.fetchall()
 	return items[0]["count"]
@@ -262,9 +265,9 @@ def getSitesPageCount():
 
 def getServiceAnimePageAcount(whereserviceclause):
 	query = (
-		"SELECT count(*) AS count FROM posts WHERE "
+		"SELECT count(*) AS count FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE "
 		+ servicewhereclause
-		+ " INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id;"
+		+ ";"
 	)
 	cursor.execute(query)
 	items = cursor.fetchall()

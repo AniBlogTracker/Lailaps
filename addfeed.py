@@ -1,11 +1,25 @@
 import sys
 import getopt
 import os
+import ssl
+import urllib.request
+from urllib.request import build_opener, install_opener, _opener
 
 import appconfig
 import feedparser
 import psycopg2
 from datetime import datetime, timezone
+
+build_opener, install_opener, _opener
+
+if _opener is None:
+	opener = build_opener()
+	install_opener(opener)
+else:
+	opener = _opener
+
+opener.addheaders = [('User-Agent','Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15'
+)]
 
 conn = psycopg2.connect(
 	user=appconfig.db_user,
@@ -73,7 +87,10 @@ for opt, arg in opts:
 			if siteid > 0:
 				print("Downloading Fav Icon for: " + url)
 				ssl._create_default_https_context = ssl._create_unverified_context
-				urllib.request.urlretrieve(url + "/" + str(siteid) + ".ico", "./static/imgcache/"+ str(siteid) + ".ico")
+				opener.retrieve(url + "/favicon.ico")
+				img = opener.open(imgurl)
+				with open("./static/imgcache/"+ str(siteid) + ".ico", 'b+w') as f:
+					f.write(img.read())
 		else:
 			print("Feed " + feedurl + " already exists")
         
