@@ -122,9 +122,12 @@ def getThumbnail(url, siteid):
 		soup = BeautifulSoup(response.read(), "html.parser")
 		image_tag = soup.find("meta", {"property": "og:image"})
 		imgurl =  image_tag.get("content")
-		print("Downloading thumbnail: " + imgurl)
-		ssl._create_default_https_context = ssl._create_unverified_context
-		urllib.request.urlretrieve(imgurl, "./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content")))
+		if os.path.isfile("./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content"))):
+			print("Thumbnail exists, skipping...")
+		else:
+			print("Downloading thumbnail: " + imgurl)
+			ssl._create_default_https_context = ssl._create_unverified_context
+			urllib.request.urlretrieve(imgurl, "./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content")))
 		return str(siteid) + os.path.basename(image_tag.get("content"))
 	else:
 		print("ERROR: Cannot retrieve meta information")
