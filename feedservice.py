@@ -178,7 +178,9 @@ def addPost(entry):
 	query = """ INSERT INTO posts(author_id, site_id, title, content, post_url, thumbnail_filename, published_date) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
 
 	content = entry["description"]
-	content = (content[:100] + "...") if len(content) > 100 else content
+	soup = BeautifulSoup(content, "html.parser")
+	content = soup.get_text()
+	content = (content[:100] + "...") if len(content) > 200 else content
 	link = entry["link"]
 
 	cursor.execute(
