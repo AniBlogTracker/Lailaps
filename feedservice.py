@@ -166,19 +166,19 @@ def getThumbnail(url, content, siteid):
 			return None
 	else:
 		imgurl = imgurl_search.group()
-		print(imgurl)
+		print()
 		
 	return getThumbnailImage(imgurl, siteid)
 	
 def getThumbnailImage(imgurl, siteid):
 	filename =  os.path.basename(imgurl)
-	if os.path.isfile(("./static/imgcache/"+ str(siteid) + filename).encode('utf-8')):
+	if os.path.isfile("./static/imgcache/"+ str(siteid) + filename):
 		print("Thumbnail exists, skipping...")
 	else:
 		print("Downloading thumbnail: " + imgurl)
 		ssl._create_default_https_context = ssl._create_unverified_context
-		img = opener.open(imgurl.encode('utf-8'))
-		with open(("./static/imgcache/"+ str(siteid) + filename).encode('utf-8'), 'b+w') as f:
+		img = opener.open(imgurl)
+		with open("./static/imgcache/"+ str(siteid) + filename, 'b+w') as f:
 			f.write(img.read())
 	return str(siteid) + filename
 
