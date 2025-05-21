@@ -177,7 +177,7 @@ def getThumbnailImage(imgurl, siteid):
 	else:
 		print("Downloading thumbnail: " + imgurl)
 		ssl._create_default_https_context = ssl._create_unverified_context
-		img = opener.open(imgurl)
+		img = opener.open(imgurl.encode('utf-8'))
 		with open("./static/imgcache/"+ str(siteid) + filename, 'b+w') as f:
 			f.write(img.read())
 	return str(siteid) + filename
