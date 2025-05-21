@@ -2,6 +2,7 @@ import os
 import ssl
 import time
 import urllib.request
+import re
 from urllib.request import build_opener, install_opener, _opener
 from datetime import datetime, timezone
 
@@ -146,13 +147,14 @@ def getThumbnail(url, siteid):
 			soup = BeautifulSoup(response.read(), "html.parser")
 			image_tag = soup.find("meta", {"property": "og:image"})
 			imgurl =  image_tag.get("content")
-			if os.path.isfile("./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content"))):
+			filename = re.search(".+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)", os.path.basename(imgurl, re.IGNORECASE)).string
+			if os.path.isfile("./static/imgcache/"+ str(siteid) + filename):
 				print("Thumbnail exists, skipping...")
 			else:
 				print("Downloading thumbnail: " + imgurl)
 				ssl._create_default_https_context = ssl._create_unverified_context
 				img = opener.open(imgurl)
-				with open("./static/imgcache/"+ str(siteid) + os.path.basename(image_tag.get("content")), 'b+w') as f:
+				with open("./static/imgcache/"+ str(siteid) + fislename, 'b+w') as f:
 					f.write(img.read())
 			return str(siteid) + os.path.basename(image_tag.get("content"))
 		except Exception:
