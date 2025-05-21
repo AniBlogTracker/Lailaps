@@ -166,6 +166,7 @@ def getThumbnail(url, content, siteid):
 			return None
 	else:
 		imgurl = imgurl_search.group().encode('utf-8')
+		print(imgurl)
 		
 	return getThumbnailImage(imgurl, siteid)
 	
