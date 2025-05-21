@@ -57,8 +57,13 @@ def getPosts(feedurl, siteid):
 		if getPostId(entry.get("link", "")) > 0:
 			print("Post " + entry["title"] + " exists, skipping...")
 			continue
-			
-		thumbnail = getThumbnail(entry.get("link", ""), entry.get("content", ""), siteid)
+		
+		tmpcontent = ""
+		if hasattr(entry, "content"):
+			tmpcontent = entry.content[0]["value"]
+		else:
+			tmpcontent = entry.get("description", "")
+		thumbnail = getThumbnail(entry.get("link", ""), tmpcontent, siteid)
 		tags = []
 		if hasattr(entry, "tags"):
 			tags = [t.get("term") for t in entry.tags]
@@ -143,35 +148,38 @@ def getMeta(url):
 
 
 def getThumbnail(url, content, siteid):
-	imgurl = re.search('(?P<url>http?://[^\s]+(png|jpeg|jpg))', content).group("url").string
-	
-	if len(imgurl) == 0:
+	imgurl_search = re.search('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', content)
+	imgurl = ""
+	if imgurl_search is None:
 		response = opener.open(url)
 		if response.status == 200:
 			try:
 				soup = BeautifulSoup(response.read(), "html.parser")
 				image_tag = soup.find("meta", {"property": "og:image"})
 				imgurl =  image_tag.get("content")
+				imgurl = re.search('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', imgurl).group()
 			except Exception:
 				print("ERROR: Cannot retrieve image")
 				return ""
 		else:
 			print("ERROR: Cannot retrieve meta information")
 			return None
-			
-	return getThumbnailImage(imgurl)
+	else:
+		imgurl = imgurl_search.group()
+		
+	return getThumbnailImage(imgurl, siteid)
 	
-def getThumbnailImage(imgurl):
-	filename = re.search(".+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)", os.path.basename(imgurl, re.IGNORECASE)).string
+def getThumbnailImage(imgurl, siteid):
+	filename =  os.path.basename(imgurl)
 	if os.path.isfile("./static/imgcache/"+ str(siteid) + filename):
 		print("Thumbnail exists, skipping...")
 	else:
 		print("Downloading thumbnail: " + imgurl)
 		ssl._create_default_https_context = ssl._create_unverified_context
 		img = opener.open(imgurl)
-		with open("./static/imgcache/"+ str(siteid) + fislename, 'b+w') as f:
+		with open("./static/imgcache/"+ str(siteid) + filename, 'b+w') as f:
 			f.write(img.read())
-	return str(siteid) + os.path.basename(image_tag.get("content"))
+	return str(siteid) + filename
 
 def downloadFavIcon(url, siteid):
 	print("Downloading Fav Icon for: " + url)
@@ -259,11 +267,12 @@ def addPost(entry):
 
 def main():
 	while True:
+		print("Checking feeds for new posts...")
 		sites = getSites()
 		for site in sites:
-			print("Checking " + site["name"])
 			if len(site["feed_url"]) == 0:
 				continue
+			print("Checking " + site["name"])
 			posts = getPosts(site["feed_url"], site["site_id"])
 			for post in posts:
 				addPost(post)
@@ -280,7 +289,7 @@ def main():
 				print("Downloading new favicon ")	
 				updateLastUpdatedSite(updateLastUpdatedSite)
 
-		print("Done adding titles, sleeping 10 minutes ")
+		print("Done adding titles, sleeping 15 minutes ")
 		time.sleep(900)
 		
 if __name__== "__main__":
