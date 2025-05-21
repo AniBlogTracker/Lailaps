@@ -20,8 +20,10 @@ if _opener is None:
 else:
 	opener = _opener
 
-opener.addheaders = [('User-Agent','Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15'
-)]
+useragent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15'
+
+opener.addheaders = [('User-Agent', useragent)]
+feedparser.USER_AGENT = useragent
 
 print("Creating image cache directory...")
 os.makedirs(",/static/imgcache", exist_ok=True)
