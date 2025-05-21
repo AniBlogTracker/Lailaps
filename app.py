@@ -46,7 +46,7 @@ def get_sites():
 @app.route("/feeds/", methods=["GET"])
 def get_feed():
 	page = request.args.get('p') or '0'
-	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
+	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
 	cursor.execute(query, (int(page) ,))
 	feeditems = cursor.fetchall()
 	print(feeditems)
@@ -71,7 +71,7 @@ def get_searchfeed():
 	if len(squery) < 1:
 		return jsonify(data={"error": "Missing query text."}), 400
 	page = request.args.get('p') or '0'
-	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE title LIKE %s OR content LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
+	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE title LIKE %s OR content LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
 	cursor.execute(query, (squery, squery, int(page),))
 	feeditems = cursor.fetchall()
 	totalitems = getSearchPageCount(query)
@@ -91,7 +91,7 @@ def get_searchfeed():
 @app.route("/feeds/sites/<siteid>", methods=["GET"])
 def get_browseBySiteId(siteid):
 	page = request.args.get('p') or '0'
-	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.site_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
+	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.site_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
 	cursor.execute(query, (siteid, int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getSiteIdPageCount(siteid)
@@ -111,7 +111,7 @@ def get_browseBySiteId(siteid):
 @app.route("/feeds/author/<authorid>/", methods=["GET"])
 def get_browseByAuthorId(authorid):
 	page = request.args.get('p') or '0'
-	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.author_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"""
+	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.author_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"""
 	cursor.execute(query, (authorid, int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getAuthorCount(authorid)
@@ -133,7 +133,7 @@ def get_browseByType(sitetype):
 	if len(sitetype) < 1 and type(service) != str:
 		return jsonify(data={"error": "Missing type."}), 400
 	page = request.args.get('p') or '0'
-	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE sitetype.name LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s ;"""
+	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE sitetype.name LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s ;"""
 	cursor.execute(query, (sitetype,int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getSiteTypePageCount(sitetype)
@@ -155,7 +155,7 @@ def get_browseByAnimeTitle(aniid):
 	if len(aniid) < 1:
 		return jsonify(data={"error": "Missing Anime Title ID."}), 400
 	page = request.args.get('p') or '0'
-	query = """SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE anime.anime_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s ;"""
+	query = """SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE anime.anime_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s ;"""
 	cursor.execute(query, (aniid,int(page)))
 	feeditems = cursor.fetchall()
 	totalitems = getAnimeTitlePageCount(aniid)
@@ -193,7 +193,7 @@ def get_browseByAnimeTitleAndService(service, aniid):
 			400,
 		)
 	query = (
-		"""SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE """
+		"""SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE """
 		+ servicewhereclause
 		+ """ ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"""
 	)
