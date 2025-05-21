@@ -58,7 +58,7 @@ def getPosts(feedurl, siteid):
 			print("Post " + entry["title"] + " exists, skipping...")
 			continue
 			
-		thumbnail = getThumbnail(entry.get("link", ""), siteid)
+		thumbnail = getThumbnail(entry.get("link", ""), entry.get("content", ""), siteid)
 		tags = []
 		if hasattr(entry, "tags"):
 			tags = [t.get("term") for t in entry.tags]
@@ -142,30 +142,36 @@ def getMeta(url):
 		return None
 
 
-def getThumbnail(url, siteid):
-	response = opener.open(url)
-	if response.status == 200:
-		try:
-			soup = BeautifulSoup(response.read(), "html.parser")
-			image_tag = soup.find("meta", {"property": "og:image"})
-			imgurl =  image_tag.get("content")
-			filename = re.search(".+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)", os.path.basename(imgurl, re.IGNORECASE)).string
-			if os.path.isfile("./static/imgcache/"+ str(siteid) + filename):
-				print("Thumbnail exists, skipping...")
-			else:
-				print("Downloading thumbnail: " + imgurl)
-				ssl._create_default_https_context = ssl._create_unverified_context
-				img = opener.open(imgurl)
-				with open("./static/imgcache/"+ str(siteid) + fislename, 'b+w') as f:
-					f.write(img.read())
-			return str(siteid) + os.path.basename(image_tag.get("content"))
-		except Exception:
-			print("ERROR: Cannot retrieve image")
-			return ""
+def getThumbnail(url, content, siteid):
+	imgurl = re.search('(?P<url>http?://[^\s]+(png|jpeg|jpg))', content).group("url").string
+	
+	if len(imgurl) == 0:
+		response = opener.open(url)
+		if response.status == 200:
+			try:
+				soup = BeautifulSoup(response.read(), "html.parser")
+				image_tag = soup.find("meta", {"property": "og:image"})
+				imgurl =  image_tag.get("content")
+			except Exception:
+				print("ERROR: Cannot retrieve image")
+				return ""
+		else:
+			print("ERROR: Cannot retrieve meta information")
+			return None
+			
+	return getThumbnailImage(imgurl)
+	
+def getThumbnailImage(imgurl):
+	filename = re.search(".+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)", os.path.basename(imgurl, re.IGNORECASE)).string
+	if os.path.isfile("./static/imgcache/"+ str(siteid) + filename):
+		print("Thumbnail exists, skipping...")
 	else:
-		print("ERROR: Cannot retrieve meta information")
-		return None
-
+		print("Downloading thumbnail: " + imgurl)
+		ssl._create_default_https_context = ssl._create_unverified_context
+		img = opener.open(imgurl)
+		with open("./static/imgcache/"+ str(siteid) + fislename, 'b+w') as f:
+			f.write(img.read())
+	return str(siteid) + os.path.basename(image_tag.get("content"))
 
 def downloadFavIcon(url, siteid):
 	print("Downloading Fav Icon for: " + url)
@@ -273,7 +279,7 @@ def main():
 				updateLastUpdatedSite(updateLastUpdatedSite)
 
 		print("Done adding titles, sleeping 10 minutes ")
-		time.sleep(600)
+		time.sleep(900)
 		
 if __name__== "__main__":
 	main()
