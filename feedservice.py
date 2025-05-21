@@ -157,7 +157,7 @@ def getThumbnail(url, content, siteid):
 				soup = BeautifulSoup(response.read(), "html.parser")
 				image_tag = soup.find("meta", {"property": "og:image"})
 				imgurl =  image_tag.get("content")
-				imgurl = re.search('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', imgurl).group()
+				imgurl = re.search('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', imgurl).group().encode('utf-8')
 			except Exception:
 				print("ERROR: Cannot retrieve image")
 				return ""
@@ -165,7 +165,7 @@ def getThumbnail(url, content, siteid):
 			print("ERROR: Cannot retrieve meta information")
 			return None
 	else:
-		imgurl = imgurl_search.group()
+		imgurl = imgurl_search.group().encode('utf-8')
 		
 	return getThumbnailImage(imgurl, siteid)
 	
