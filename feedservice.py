@@ -157,7 +157,7 @@ def getThumbnail(url, content, siteid):
 				soup = BeautifulSoup(response.read(), "html.parser")
 				image_tag = soup.find("meta", {"property": "og:image"})
 				imgurl =  image_tag.get("content")
-				imgurl = re.search('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', imgurl).group().encode('utf-8')
+				imgurl = re.search('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', imgurl).group()
 			except Exception:
 				print("ERROR: Cannot retrieve image")
 				return ""
@@ -165,20 +165,20 @@ def getThumbnail(url, content, siteid):
 			print("ERROR: Cannot retrieve meta information")
 			return None
 	else:
-		imgurl = imgurl_search.group().encode('utf-8')
+		imgurl = imgurl_search.group()
 		print(imgurl)
 		
 	return getThumbnailImage(imgurl, siteid)
 	
 def getThumbnailImage(imgurl, siteid):
 	filename =  os.path.basename(imgurl)
-	if os.path.isfile("./static/imgcache/"+ str(siteid) + filename):
+	if os.path.isfile(("./static/imgcache/"+ str(siteid) + filename).encode('utf-8')):
 		print("Thumbnail exists, skipping...")
 	else:
 		print("Downloading thumbnail: " + imgurl)
 		ssl._create_default_https_context = ssl._create_unverified_context
-		img = opener.open(imgurl)
-		with open("./static/imgcache/"+ str(siteid) + filename, 'b+w') as f:
+		img = opener.open(imgurl.encode('utf-8'))
+		with open(("./static/imgcache/"+ str(siteid) + filename).encode('utf-8'), 'b+w') as f:
 			f.write(img.read())
 	return str(siteid) + filename
 
