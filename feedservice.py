@@ -262,6 +262,8 @@ def main():
 		sites = getSites()
 		for site in sites:
 			print("Checking " + site["name"])
+			if len(site["feed_url"]) == 0:
+				continue
 			posts = getPosts(site["feed_url"], site["site_id"])
 			for post in posts:
 				addPost(post)
