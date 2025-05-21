@@ -245,8 +245,19 @@ def addPost(entry):
 	postid = getPostId(link)
 	possibletitles = entry["categories"]
 	animeids = []
+	
+	ignorewords = ["anime", "animation", "review", "comedy", "adventure", "mystery", "commentary", "opinion", "fanart", "fan art", "art", "magical girl", "malhou shoujo", "music", "idol", "drama" , "food", "manga"]
 
 	for possibletitle in possibletitles:
+		hasIgnoreWord = False
+		for iword in ignorewords:
+			if possibletitle.lower() == iword:
+				hasIgnoreWord = True
+				break
+		
+		if hasIgnoreWord:
+			continue
+			
 		aniid = getanimeLid(possibletitle)
 		if aniid > 0:
 			found = False
