@@ -46,11 +46,31 @@ def get_sites():
 @app.route("/feeds/", methods=["GET"])
 def get_feed():
 	page = request.args.get('p') or '0'
+	exclude = request.args.get('extypeid') or "";
+	
+	if type(exclude) is not str:
+		exclude = str(exclude)
+	
 	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
-	cursor.execute(query, (int(page) ,))
+	if len(exclude) > 0:
+		texcludearray = exclude.split(",")
+		fexclude = []
+		for typeid in texcludearray:
+			if typeid.isnumeric():
+				fexclude.append(typeid)
+		if len(fexclude) > 0:		
+			query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE site.sitetype_id != ANY(%s) ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
+			excludestrarray = (",".join(fexclude)) if len(fexclude) > 1 else fexclude[0]
+			excludestrarray = "{" + excludestrarray + "}"
+			cursor.execute(query, (excludestrarray, int(page)))
+		else:
+			cursor.execute(query, (int(page) ,))
+			exclude = ""
+	else:
+		cursor.execute(query, (int(page) ,))
 	feeditems = cursor.fetchall()
 	print(feeditems)
-	totalitems = getPageCount()
+	totalitems = getPageCount(exclude)
 	pagedict = {
 		"next": (None)
 		if int(page) + 20 > totalitems
@@ -249,9 +269,20 @@ def getAnimeTitlePageCount(aniid):
 	return items[0]["count"]
 
 
-def getPageCount():
-	query = "SELECT count(*) AS count from posts;"
-	cursor.execute(query)
+def getPageCount(exclude):
+	if len(exclude) > 0:
+		texcludearray = exclude.split(",")
+		fexclude = []
+		for typeid in texcludearray:
+			if typeid.isnumeric():
+				fexclude.append(typeid)
+		query = "SELECT count(*) AS count FROM posts INNER JOIN site ON posts.site_id = site.site_id WHERE site.sitetype_id != ANY(%s);"
+		excludestrarray = (",".join(fexclude)) if len(fexclude) > 1 else fexclude[0]
+		excludestrarray = "{" + excludestrarray + "}"
+		cursor.execute(query, (excludestrarray, ))
+	else:
+		query = "SELECT count(*) AS count FROM posts;"
+		cursor.execute(query)
 	items = cursor.fetchall()
 	return items[0]["count"]
 
