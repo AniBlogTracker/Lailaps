@@ -135,15 +135,19 @@ def addAuthor(name, siteid, posturl):
 
 
 def getMeta(url):
-	response = opener.open(url)
-	if response.status == 200:
-		soup = BeautifulSoup(response.read(), "html.parser")
-		mastodon_tag = soup.find("meta", {"name": "fediverse:creator"})
-		if mastodon_tag:
-			return mastodon_tag.get("content")
-		return ""
-	else:
-		print("ERROR: Cannot retrieve meta information for image")
+	try:
+		response = opener.open(url)
+		if response.status == 200:
+			soup = BeautifulSoup(response.read(), "html.parser")
+			mastodon_tag = soup.find("meta", {"name": "fediverse:creator"})
+			if mastodon_tag:
+				return mastodon_tag.get("content")
+			return ""
+		else:
+			print("ERROR: Cannot retrieve meta information for image")
+			return None
+	except:
+		print("An exception occurred trying to retrieve metadata.")
 		return None
 
 
@@ -229,7 +233,7 @@ def addPost(entry):
 	content = (content[:150] + "...") if len(content) > 150 else content
 	link = entry["link"]
 	
-	title = (entry["title"][:100] + "...") if len(content) > 100 else content
+	title = (entry["title"][:150] + "...") if len(content) > 150 else content
 
 	cursor.execute(
 		query,
