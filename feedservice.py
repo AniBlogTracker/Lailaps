@@ -230,12 +230,12 @@ def addPost(entry):
 	content = entry["description"]
 	soup = BeautifulSoup(content, "html.parser")
 	content = soup.get_text()
-	content = (content[:200] + "...") if len(content) > 200 else content
+	content = (content[:300] + "...") if len(content) > 300 else content
 	link = entry["link"]
 	
 	tsoup = BeautifulSoup(entry["title"], "html.parser")
 	title = tsoup.get_text()
-	title = (title[:200] + "...") if len(content) > 200 else content
+	title = (title[:300] + "...") if len(content) > 300 else content
 
 	cursor.execute(
 		query,
