@@ -226,12 +226,14 @@ def addPost(entry):
 	content = entry["description"]
 	soup = BeautifulSoup(content, "html.parser")
 	content = soup.get_text()
-	content = (content[:100] + "...") if len(content) > 200 else content
+	content = (content[:150] + "...") if len(content) > 150 else content
 	link = entry["link"]
+	
+	title = (entry["title"][:100] + "...") if len(content) > 100 else content
 
 	cursor.execute(
 		query,
-		(author, entry["siteid"], entry["title"], content, link,entry["image"], entry["published"],)
+		(author, entry["siteid"], title, content, link,entry["image"], entry["published"],)
 	)
 	conn.commit()
 
