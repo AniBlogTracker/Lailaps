@@ -162,6 +162,7 @@ def getThumbnail(url, content, siteid):
 				image_tag = soup.find("meta", {"property": "og:image"})
 				imgurl =  image_tag.get("content")
 				imgurl = re.search('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', imgurl).group()
+				time.sleep(10)
 			except Exception:
 				print("ERROR: Cannot retrieve image")
 				return ""
