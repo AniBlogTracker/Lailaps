@@ -235,7 +235,7 @@ def addPost(entry):
 	
 	tsoup = BeautifulSoup(entry["title"], "html.parser")
 	title = tsoup.get_text()
-	title = (title[:300] + "...") if len(content) > 300 else content
+	title = (title[:300] + "...") if len(title) > 300 else title
 
 	cursor.execute(
 		query,
