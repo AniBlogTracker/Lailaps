@@ -27,7 +27,11 @@ def index():
 def get_sites():
 	page = request.args.get('p') or '0'
 	query = "SELECT * FROM site ORDER BY name asc OFFSET %s LIMIT 20"
-	cursor.execute(query, (int(page),))
+	try:
+		cursor.execute(query, (int(page),))
+	except Exception as e:
+		conn.rollback()
+		return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 	siteitems = cursor.fetchall()
 	totalitems = getSitesPageCount()
 	pagedict = {
@@ -62,9 +66,17 @@ def get_feed():
 			query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE site.sitetype_id != ALL(%s) ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
 			excludestrarray = (",".join(fexclude)) if len(fexclude) > 1 else fexclude[0]
 			excludestrarray = "{" + excludestrarray + "}"
-			cursor.execute(query, (excludestrarray, int(page)))
+			try:
+				cursor.execute(query, (excludestrarray, int(page)))
+			except Exception as e:
+				conn.rollback()
+				return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 		else:
-			cursor.execute(query, (int(page) ,))
+			try:
+				cursor.execute(query, (int(page) ,))
+			except Exception as e:
+				conn.rollback()
+				return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 			exclude = ""
 	else:
 		cursor.execute(query, (int(page) ,))
@@ -92,7 +104,11 @@ def get_searchfeed():
 		return jsonify(data={"error": "Missing query text."}), 400
 	page = request.args.get('p') or '0'
 	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE title LIKE %s OR content LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
-	cursor.execute(query, (squery, squery, int(page),))
+	try:
+		cursor.execute(query, (squery, squery, int(page),))
+	except Exception as e:
+		conn.rollback()
+		return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 	feeditems = cursor.fetchall()
 	totalitems = getSearchPageCount(query)
 	pagedict = {
@@ -112,7 +128,11 @@ def get_searchfeed():
 def get_browseBySiteId(siteid):
 	page = request.args.get('p') or '0'
 	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.site_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
-	cursor.execute(query, (siteid, int(page)))
+	try:
+		cursor.execute(query, (siteid, int(page)))
+	except Exception as e:
+		conn.rollback()
+		return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 	feeditems = cursor.fetchall()
 	totalitems = getSiteIdPageCount(siteid)
 	pagedict = {
@@ -132,7 +152,11 @@ def get_browseBySiteId(siteid):
 def get_browseByAuthorId(authorid):
 	page = request.args.get('p') or '0'
 	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE posts.author_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"""
-	cursor.execute(query, (authorid, int(page)))
+	try:
+		cursor.execute(query, (authorid, int(page)))
+	except Exception as e:
+		conn.rollback()
+		return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 	feeditems = cursor.fetchall()
 	totalitems = getAuthorCount(authorid)
 	pagedict = {
@@ -154,7 +178,11 @@ def get_browseByType(sitetype):
 		return jsonify(data={"error": "Missing type."}), 400
 	page = request.args.get('p') or '0'
 	query = """SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE sitetype.name LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s ;"""
-	cursor.execute(query, (sitetype,int(page)))
+	try:
+		cursor.execute(query, (sitetype,int(page)))
+	except Exception as e:
+		conn.rollback()
+		return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 	feeditems = cursor.fetchall()
 	totalitems = getSiteTypePageCount(sitetype)
 	pagedict = {
@@ -176,7 +204,11 @@ def get_browseByAnimeTitle(aniid):
 		return jsonify(data={"error": "Missing Anime Title ID."}), 400
 	page = request.args.get('p') or '0'
 	query = """SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE anime.anime_id = %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s ;"""
-	cursor.execute(query, (aniid,int(page)))
+	try:
+		cursor.execute(query, (aniid,int(page)))
+	except Exception as e:
+		conn.rollback()
+		return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 	feeditems = cursor.fetchall()
 	totalitems = getAnimeTitlePageCount(aniid)
 	pagedict = {
@@ -217,7 +249,11 @@ def get_browseByAnimeTitleAndService(service, aniid):
 		+ servicewhereclause
 		+ """ ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"""
 	)
-	cursor.execute(query, (aniid,int(page)))
+	try:
+		cursor.execute(query, (aniid,int(page)))
+	except Exception as e:
+		conn.rollback()
+		return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 	feeditems = cursor.fetchall()
 	totalitems = getAnimeTitlePageCount(aniid)
 	pagedict = {
