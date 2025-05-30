@@ -275,6 +275,7 @@ def get_season():
 	year = datetime.now().year
 	if month <= 3:
 		data = {
+			"current_season" : "winter",
 			"winter": {"year": year, "data": None},
 			"spring": {"year": year - 1, "data": None},
 			"summer": {"year": year - 1, "data": None},
@@ -282,6 +283,7 @@ def get_season():
 		}
 	elif month <= 6:
 		data = {
+			"current_season" : "spring",
 			"winter": {"year": year, "data": None},
 			"spring": {"year": year, "data": None},
 			"summer": {"year": year - 1, "data": None},
@@ -289,6 +291,7 @@ def get_season():
 		}
 	elif month <= 0:
 		data = {
+			"current_season" : "summer",
 			"winter": {"year": year, "data": None},
 			"spring": {"year": year, "data": None},
 			"summer": {"year": year, "data": None},
@@ -296,6 +299,7 @@ def get_season():
 		}
 	else:
 		data = {
+			"current_season" : "fall",
 			"winter": {"year": year, "data": None},
 			"spring": {"year": year, "data": None},
 			"summer": {"year": year, "data": None},
