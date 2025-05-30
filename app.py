@@ -246,7 +246,7 @@ def get_browseByAnimeTitleAndService(service, aniid):
 			400,
 		)
 	query = (
-		"""SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE """
+		"""SELECT posts.post_id as post_id, posts.title as title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type, anime.title AS anime_title FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id INNER JOIN post_relatedanime ON posts.post_id = post_relatedanime.post_id INNER JOIN anime ON anime.anime_id = post_relatedanime.anime_id WHERE """
 		+ servicewhereclause
 		+ """ ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"""
 	)
