@@ -3,6 +3,7 @@ import psycopg2
 import psycopg2.extras
 from json_tricks import dumps
 from flask import Flask, jsonify, render_template, request, send_from_directory
+from datetime import datetime
 
 print("Connecting to database...")
 conn = psycopg2.connect(
@@ -267,6 +268,61 @@ def get_browseByAnimeTitleAndService(service, aniid):
 	data = {"data" : addAnimeRelationInfo(feeditems)}
 	data["page"] = pagedict
 	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
+
+@app.route("/seasons/", methods=["GET"])
+def get_season():
+	month = datetime.now().month
+	year = datetime.now().year
+	if month <= 3:
+		data = {
+			"winter": {"year": year, "data": None},
+			"spring": {"year": year - 1, "data": None},
+			"summer": {"year": year - 1, "data": None},
+			"fall": {"year": year - 1, "data": None},
+		}
+	elif month <= 6:
+		data = {
+			"winter": {"year": year, "data": None},
+			"spring": {"year": year, "data": None},
+			"summer": {"year": year - 1, "data": None},
+			"fall": {"year": year - 1, "data": None},
+		}
+	elif month <= 0:
+		data = {
+			"winter": {"year": year, "data": None},
+			"spring": {"year": year, "data": None},
+			"summer": {"year": year, "data": None},
+			"fall": {"year": year - 1, "data": None},
+		}
+	else:
+		data = {
+			"winter": {"year": year, "data": None},
+			"spring": {"year": year, "data": None},
+			"summer": {"year": year, "data": None},
+			"fall": {"year": year, "data": None},
+		}
+
+	for seasonstr in ["winter", "spring", "summer", "fall"]:
+		query = "SELECT anime.anime_id AS anime_id, title, season, year, count(*) AS count FROM post_relatedanime INNER JOIN anime ON post_relatedanime.anime_id  = anime.anime_id WHERE anime.season LIKE %s AND year = %s  GROUP BY anime.anime_id, anime.title, anime.season , anime.\"year\" ORDER BY count DESC"
+		try:
+			cursor.execute(query, (seasonstr.upper(), data[seasonstr]["year"]))
+		except Exception as e:
+			conn.rollback()
+			return (
+				dumps({"error": str(e)}, ensure_ascii=False).encode("utf8"),
+				500,
+				{"Content-Type": "application/json; charset=utf-8"},
+			)
+		items = cursor.fetchall()
+		seasondict = data[seasonstr]
+		seasondict["data"] = items
+		data[seasonstr] = seasondict
+
+	return (
+		dumps(data, ensure_ascii=False).encode("utf8"),
+		200,
+		{"Content-Type": "application/json; charset=utf-8"},
+	)
 
 
 def getSearchPageCount(squery):
