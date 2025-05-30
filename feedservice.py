@@ -261,7 +261,7 @@ def addPost(entry):
 	animeids = []
 	
 	ignorewords = ["anime", "animation", "review", "comedy", "adventure", "mystery", "commentary", "opinion", "fanart", "fan art", "art", "magical girl", "malhou shoujo", "music", "idol", "drama" , "food", "manga"]
-
+	increment = 0;
 	for possibletitle in possibletitles:
 		hasIgnoreWord = False
 		for iword in ignorewords:
@@ -282,13 +282,15 @@ def addPost(entry):
 			if found:
 				continue
 		animeids.append(aniid)
+		increment += 1
+		if increment > 4:
+			break;
 
 	for aid in animeids:
 		if aid > 0:
 			addPostAnimeRelation(postid, aid)
 
 	print("Post " + entry["title"] + " added")
-
 
 def main():
 	while True:
