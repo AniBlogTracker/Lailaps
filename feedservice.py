@@ -260,7 +260,7 @@ def addPost(entry):
 	possibletitles = entry["categories"]
 	animeids = []
 	
-	ignorewords = ["anime", "animation", "review", "comedy", "adventure", "mystery", "commentary", "opinion", "fanart", "fan art", "art", "magical girl", "malhou shoujo", "music", "idol", "drama" , "food", "manga", "Episodic Anime posts", "reviews", "manga reviews", "action", "uncategorized", "articles", "analysis", "essay", "opinion", "sci-fi", "awards", "commentary"]
+	ignorewords = ["anime", "animation", "review", "comedy", "adventure", "mystery", "commentary", "opinion", "fanart", "fan art", "art", "magical girl", "mahou shoujo", "music", "idol", "drama" , "food", "manga", "Episodic Anime posts", "reviews", "manga reviews", "action", "uncategorized", "articles", "analysis", "essay", "opinion", "sci-fi", "awards", "commentary", "news", "anime news", "movies", "manga", "lifestyle"]
 	increment = 0;
 	for possibletitle in possibletitles:
 		hasIgnoreWord = False
