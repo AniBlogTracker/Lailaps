@@ -118,8 +118,7 @@ def updateAuthorMeta(authorid, posturl):
 	)
 	mastodon = ""
 	if meta := getMeta(posturl):
-		if meta["mastodon"]:
-			mastodon = meta["mastodon"]
+		mastodon = meta
 	cursor2.execute(query, (mastodon, datetime.now(), authorid))
 	conn.commit()
 
@@ -202,8 +201,7 @@ def downloadFavIcon(url, siteid):
 
 def updateLastUpdatedSite(siteid):
 	query = """ UPDATE site SET favicon_lastupdated = %s WHERE site_id = %s """
-	datenow = datetime.now()
-	cursor2.execute(query, (datenow, siteid))
+	cursor2.execute(query, (datetime.now(), siteid))
 	conn.commit()
 
 
@@ -234,7 +232,7 @@ def addPost(entry):
 		adata = getAuthor(entry["author"], entry["siteid"])
 		diff = time.mktime(adata["lastupdated"].timetuple()) - time.mktime(datetime.now().timetuple())
 		if diff < -1209600:
-			updateAuthorMeta(entry["author"], entry["link"])
+			updateAuthorMeta(author, entry["link"])
 	else:
 		author = addAuthor(entry["author"], entry["siteid"], entry["link"])
 
@@ -260,7 +258,7 @@ def addPost(entry):
 	possibletitles = entry["categories"]
 	animeids = []
 	
-	ignorewords = ["anime", "animation", "review", "comedy", "adventure", "mystery", "commentary", "opinion", "fanart", "fan art", "art", "magical girl", "malhou shoujo", "music", "idol", "drama" , "food", "manga", "Episodic Anime posts", "reviews", "manga reviews", "action", "uncategorized", "articles", "analysis", "essay", "opinion", "sci-fi", "awards", "commentary"]
+	ignorewords = ["anime", "animation", "review", "comedy", "adventure", "mystery", "commentary", "opinion", "fanart", "fan art", "art", "magical girl", "mahou shoujo", "music", "idol", "drama" , "food", "manga", "Episodic Anime posts", "reviews", "manga reviews", "action", "uncategorized", "articles", "analysis", "essay", "opinion", "sci-fi", "awards", "commentary", "news", "anime news", "movies", "manga", "lifestyle", "europe", "japan", "north america", "moe", "RPG", "video games", "roundup"]
 	increment = 0;
 	for possibletitle in possibletitles:
 		hasIgnoreWord = False
@@ -314,7 +312,7 @@ def main():
 			
 			if downloadfavicon:
 				print("Downloading new favicon ")	
-				updateLastUpdatedSite(updateLastUpdatedSite)
+				updateLastUpdatedSite(site["site_id"])
 
 		print("Done adding titles, sleeping 15 minutes ")
 		time.sleep(900)
