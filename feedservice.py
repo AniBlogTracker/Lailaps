@@ -313,7 +313,7 @@ def main():
 			
 			if downloadfavicon:
 				print("Downloading new favicon ")	
-				//updateLastUpdatedSite(updateLastUpdatedSite)
+				#updateLastUpdatedSite(updateLastUpdatedSite)
 
 		print("Done adding titles, sleeping 15 minutes ")
 		time.sleep(900)
