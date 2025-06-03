@@ -233,7 +233,7 @@ def addPost(entry):
 		adata = getAuthor(entry["author"], entry["siteid"])
 		diff = time.mktime(adata["lastupdated"].timetuple()) - time.mktime(datetime.now().timetuple())
 		if diff < -1209600:
-			updateAuthorMeta(entry["author"], entry["link"])
+			updateAuthorMeta(author, entry["link"])
 	else:
 		author = addAuthor(entry["author"], entry["siteid"], entry["link"])
 
