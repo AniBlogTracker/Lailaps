@@ -118,8 +118,7 @@ def updateAuthorMeta(authorid, posturl):
 	)
 	mastodon = ""
 	if meta := getMeta(posturl):
-		if meta["mastodon"]:
-			mastodon = meta["mastodon"]
+		mastodon = meta
 	cursor2.execute(query, (mastodon, datetime.now(), authorid))
 	conn.commit()
 
