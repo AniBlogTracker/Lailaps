@@ -206,15 +206,22 @@ def updateLastUpdatedSite(siteid):
 
 
 def getanimeLid(title):
-	stitle = "%" + title + "%"
-	query = """SELECT * from anime WHERE title LIKE %s OR synonyms LIKE %s"""
-	cursor.execute(query, (stitle, stitle))
+	query = """SELECT * from anime"""
+	cursor.execute(query
 	animeids = cursor.fetchall()
-	if len(animeids) > 0:
-		return animeids[0]["anime_id"]
+	for animeid in animeids:
+		synonyms = animeid["synonyms"].split(',')
+		animetitle = animeid["title"]
+		res = SequenceMatcher(None, title.lower(), animetitle.lower()).ratio()
+		if res >= .75:
+			return animeid["anime_id"]
+		else:
+			for synonym in synonyms:
+				res = SequenceMatcher(None, title.lower(), synonym.lower()).ratio()
+				if res >= .75:
+					return animeid["anime_id"]
 	return -1
-
-
+	
 def addPostAnimeRelation(postid, animeid):
 	print("Adding Post Id relation " + str(postid) + "for Anime ID" + str(animeid))
 	query = """ INSERT INTO post_relatedanime(post_id, anime_id) VALUES (%s, %s)"""
