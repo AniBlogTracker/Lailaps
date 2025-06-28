@@ -11,6 +11,7 @@ import feedparser
 import psycopg2
 import psycopg2.extras
 from bs4 import BeautifulSoup
+from difflib import SequenceMatcher
 
 build_opener, install_opener, _opener
 
@@ -207,7 +208,7 @@ def updateLastUpdatedSite(siteid):
 
 def getanimeLid(title):
 	query = """SELECT * from anime"""
-	cursor.execute(query
+	cursor.execute(query,)
 	animeids = cursor.fetchall()
 	for animeid in animeids:
 		synonyms = animeid["synonyms"].split(',')
