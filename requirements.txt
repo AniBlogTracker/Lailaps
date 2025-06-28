@@ -4,3 +4,4 @@ feedparser
 beautifulsoup
 Json-tricks
 gunicorn
+difflib
