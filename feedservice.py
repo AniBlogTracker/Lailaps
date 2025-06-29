@@ -152,7 +152,7 @@ def getMeta(url):
 
 
 def getThumbnail(url, content, siteid):
-	imgurl_search = re.search('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', content)
+	imgurl_search = re.finditer('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', content)
 	imgurl = ""
 	if imgurl_search is None:
 		try:
@@ -170,8 +170,13 @@ def getThumbnail(url, content, siteid):
 			print("ERROR: Cannot retrieve image")
 			return ""
 	else:
-		imgurl = imgurl_search.group()
-		print()
+		for match in imgurl_search:
+			if "twemoji" in match.group():
+				continue
+			else:
+				imgurl = match.group()
+				break
+		print(imgurl)
 		
 	return getThumbnailImage(imgurl, siteid)
 	
@@ -188,7 +193,7 @@ def getThumbnailImage(imgurl, siteid):
 				f.write(img.read())
 		except:
 			print("An exception occurred trying to download thumbnail")
-			return ""
+			return "" 
 	return str(siteid) + filename
 
 def downloadFavIcon(url, siteid):
