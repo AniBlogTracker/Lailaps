@@ -207,19 +207,20 @@ def updateLastUpdatedSite(siteid):
 
 
 def getanimeLid(title):
-	query = """SELECT * from anime"""
-	cursor.execute(query,)
+	searchquery = "%" + title + "%"
+	query = """SELECT * from anime WHERE title LIKE %s OR synonyms LIKE %s"""
+	cursor.execute(query, (searchquery, searchquery))
 	animeids = cursor.fetchall()
 	for animeid in animeids:
 		synonyms = animeid["synonyms"].split(',')
 		animetitle = animeid["title"]
 		res = SequenceMatcher(None, title.lower(), animetitle.lower()).ratio()
-		if res >= .75:
+		if res >= 0.85:
 			return animeid["anime_id"]
 		else:
 			for synonym in synonyms:
 				res = SequenceMatcher(None, title.lower(), synonym.lower()).ratio()
-				if res >= .75:
+				if res >= 0.85:
 					return animeid["anime_id"]
 	return -1
 	
