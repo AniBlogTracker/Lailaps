@@ -152,7 +152,7 @@ def getMeta(url):
 
 
 def getThumbnail(url, content, siteid):
-	imgurl_search = re.findall('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', content)
+	imgurl_search = re.finditer('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', content)
 	imgurl = ""
 	if len(imgurl_search) == 0:
 		try:
@@ -171,10 +171,10 @@ def getThumbnail(url, content, siteid):
 			return ""
 	else:
 		for match in imgurl_search:
-			if "twemoji" in match:
+			if "twemoji" in match.group():
 				continue
 			else:
-				imgurl = match
+				imgurl = match.group()
 				break
 		print(imgurl)
 		
