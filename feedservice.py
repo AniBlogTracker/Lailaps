@@ -154,7 +154,7 @@ def getMeta(url):
 def getThumbnail(url, content, siteid):
 	imgurl_search = re.finditer('(http|https)?://[^\s]+(jpg|jxt|png|webm|webp|avif|gif|bmp|tif)', content)
 	imgurl = ""
-	if len(imgurl_search) == 0:
+	if imgurl_search is None:
 		try:
 			response = opener.open(url)
 			if response.status == 200:
