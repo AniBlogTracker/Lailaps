@@ -290,7 +290,7 @@ def get_season():
 			"summer": {"year": year - 1, "data": None},
 			"fall": {"year": year - 1, "data": None},
 		}
-	elif month <= 0:
+	elif month <= 9:
 		data = {
 			"current_season" : "summer",
 			"winter": {"year": year, "data": None},
@@ -415,7 +415,7 @@ def addAnimeRelationInfo(feeditems):
 	return feeditems
 	
 def getAnimeTitleDataFromId(aniid):
-	query = "SELECT * FROM anime WHERE anime_id = %s;"
+	query = "SELECT * from anime WHERE anime_id = %s;"
 	cursor.execute(query, (aniid,))
 	items = cursor.fetchall()
 	return items[0]
