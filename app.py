@@ -267,6 +267,7 @@ def get_browseByAnimeTitleAndService(service, aniid):
 		"prev": (int(page) - 20) if int(page) - 20 >= 0 else None,
 	}
 	data = {"data" : addAnimeRelationInfo(feeditems)}
+	data["anime_info"] = getAnimeTitleDataFromIdAndService(aniid, lowercaseService)
 	data["page"] = pagedict
 	return dumps(data, ensure_ascii=False).encode('utf8'), 200, {'Content-Type': 'application/json; charset=utf-8'}
 
@@ -416,6 +417,17 @@ def addAnimeRelationInfo(feeditems):
 	
 def getAnimeTitleDataFromId(aniid):
 	query = "SELECT * from anime WHERE anime_id = %s;"
+	cursor.execute(query, (aniid,))
+	items = cursor.fetchall()
+	return items[0]
+	
+def getAnimeTitleDataFromIdAndService(aniid, service):
+	servicewhereclause = ""
+	if service == "mal":
+		servicewhereclause = "anime.mal_id = %s"
+	elif service == "anilist":
+		servicewhereclause == "anime.anilist_id = %s"
+	query = "SELECT * from anime WHERE " + servicewhereclause + ";"
 	cursor.execute(query, (aniid,))
 	items = cursor.fetchall()
 	return items[0]
