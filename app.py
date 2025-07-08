@@ -100,18 +100,17 @@ def get_feed():
 @app.route("/search/", methods=["GET"])
 def get_searchfeed():
 	squery = request.args["q"]
-	squery = "%" + squery + "%"
 	if len(squery) < 1:
 		return jsonify(data={"error": "Missing query text."}), 400
 	page = request.args.get('p') or '0'
-	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE title LIKE %s OR content LIKE %s ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
+	query = "SELECT post_id, title, content, post_url, thumbnail_filename, published_date, author.name AS author, author.author_id AS author_id, mastodon, site.name AS websitename, site.site_id AS site_id, url, sitetype.name AS type FROM posts INNER JOIN site ON posts.site_id = site.site_id INNER JOIN author ON posts.author_id = author.author_id INNER JOIN sitetype ON site.sitetype_id = sitetype.sitetype_id WHERE to_tsvector('english', title) @@ to_tsquery(%s) OR to_tsvector('english', content) @@ to_tsquery(%s) ORDER BY posts.published_date DESC LIMIT 20 OFFSET %s;"
 	try:
 		cursor.execute(query, (squery, squery, int(page),))
 	except Exception as e:
 		conn.rollback()
 		return dumps({"error": "{e}"}, ensure_ascii=False).encode('utf8'), 500, {'Content-Type': 'application/json; charset=utf-8'}
 	feeditems = cursor.fetchall()
-	totalitems = getSearchPageCount(query)
+	totalitems = getSearchPageCount(squery)
 	pagedict = {
 		"next": (None)
 		if int(page) + 20 > totalitems
@@ -332,8 +331,7 @@ def get_season():
 
 
 def getSearchPageCount(squery):
-	squery = "%" + squery + "%"
-	query = """SELECT count(*) AS count from posts WHERE title LIKE %s OR content LIKE %s;"""
+	query = """SELECT count(*) AS count from posts WHERE to_tsvector('english', title) @@ to_tsquery(%s) OR to_tsvector('english', content) @@ to_tsquery(%s);"""
 	cursor.execute(query, (squery, squery))
 	items = cursor.fetchall()
 	return items[0]["count"]
