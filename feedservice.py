@@ -305,31 +305,29 @@ def addPost(entry):
 	print("Post " + entry["title"] + " added")
 
 def main():
-	while True:
-		print("Checking feeds for new posts...")
-		sites = getSites()
-		for site in sites:
-			if len(site["feed_url"]) == 0:
-				continue
-			print("Checking " + site["name"])
-			posts = getPosts(site["feed_url"], site["site_id"])
-			for post in posts:
-				addPost(post)
-			
-			downloadfavicon = False
-			if site["favicon_lastupdated"]:
-				diff = time.mktime(site["favicon_lastupdated"].timetuple()) - time.mktime(datetime.now().timetuple())
-				if diff < -1209600:
-					downloadfavicon = True
-			else:
-				downloadfavicon = True
-			
-			if downloadfavicon:
-				print("Downloading new favicon ")	
-				updateLastUpdatedSite(site["site_id"])
+    print("Checking feeds for new posts...")
+    sites = getSites()
+    for site in sites:
+        if len(site["feed_url"]) == 0:
+            continue
+        print("Checking " + site["name"])
+        posts = getPosts(site["feed_url"], site["site_id"])
+        for post in posts:
+            addPost(post)
+        
+        downloadfavicon = False
+        if site["favicon_lastupdated"]:
+            diff = time.mktime(site["favicon_lastupdated"].timetuple()) - time.mktime(datetime.now().timetuple())
+            if diff < -1209600:
+                downloadfavicon = True
+        else:
+            downloadfavicon = True
+        
+        if downloadfavicon:
+            print("Downloading new favicon ")	
+            updateLastUpdatedSite(site["site_id"])
 
-		print("Done adding titles, sleeping 15 minutes ")
-		time.sleep(900)
+    print("Done adding titles ")
 		
 if __name__== "__main__":
 	main()
